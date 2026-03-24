@@ -1,0 +1,29 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(*)",
+      "Read",
+      "Write",
+      "Edit",
+      "Glob",
+      "Grep",
+      "Agent"
+    ],
+    "deny": [
+      "Bash(rm -rf:*)",
+      "Bash(rm -r /:*)",
+      "Bash(git push --force:*)",
+      "Bash(git push -f:*)",
+      "Bash(git reset --hard:*)",
+      "Bash(git checkout --:*)",
+      "Bash(git clean:*)",
+      "Bash(git branch -D:*)",
+      "Bash(DROP TABLE:*)",
+      "Bash(DROP DATABASE:*)",
+      "Bash(shutdown:*)",
+      "Bash(reboot:*)",
+      "Bash(mkfs:*)",
+      "Bash(dd if=:*)"
+    ]
+  }
+}
