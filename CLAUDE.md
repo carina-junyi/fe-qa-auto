@@ -8,6 +8,13 @@
 
 - **URL list**: `urls/url_list.txt` — 每行格式 `<url> <status>`
 
+  支援兩種 URL 類型：
+
+  | URL 類型 | 特徵 | 處理方式 |
+  |----------|------|----------|
+  | **題目 URL** | 含 `/exercises/` | 直接進入 QA 流程 |
+  | **資料夾 URL** | 不含 `/exercises/`（如 `/course-compare/...`） | Step 0 自動展開為底下的題目 URL |
+
   | 狀態 | 說明 | 何時標記 |
   |------|------|----------|
   | `ToDo` | 尚未開始（可省略） | URL 加入時 |
@@ -15,7 +22,7 @@
   | `Pass` | 無數學錯誤 | Step 6 |
   | `Fail` | 有數學錯誤 | Step 6 |
 
-  **只處理 `ToDo`（或無狀態）的 URL。**
+  **只處理 `ToDo`（或無狀態）的 URL。** 以 `#` 開頭的行為註解，會被略過。
 
 ## Execution Rules
 
@@ -35,6 +42,18 @@
 | `references/command-reference.md` | agent-browser 指令速查 |
 | `references/qa-report-format.md` | QA_result.txt 格式規範 |
 | `page_structures/` | DOM 結構、CSS selectors、JS extraction |
+
+---
+
+## Workflow
+
+### Step 0: Resolve URLs（展開資料夾連結）
+
+```
+/resolve-urls
+```
+
+掃描 `url_list.txt`，將資料夾 URL（不含 `/exercises/`）展開為底下的題目 URL。已展開或純題目 URL 的檔案不受影響。
 
 ---
 
