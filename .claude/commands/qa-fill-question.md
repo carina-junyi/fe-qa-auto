@@ -104,7 +104,44 @@ JSEOF
 
 ### MathQuill 輸入框
 
-**重要：** `agent-browser fill @eN` 對 MathQuill 輸入框會 timeout，必須用 mouse click + `press` 逐字輸入：
+#### 方法 1（推薦）：使用 LaTeX API 直接設定值
+
+透過 MathQuill 的 LaTeX API 可以設定任意數學表達式，包括帶分數：
+
+```bash
+cat > /tmp/set_mq_latex.js << 'JSEOF'
+(function(latexStr, mqIndex){
+  var mqs = document.querySelectorAll('.mq-editable-field.mq-math-mode');
+  var mq = mqs[mqIndex || 0];
+  if (!mq) return JSON.stringify({error: 'no MathQuill field at index ' + mqIndex});
+  try {
+    var MQ = MathQuill.getInterface(2);
+    var field = MQ.MathField(mq);
+    field.latex(latexStr);
+    mq.dispatchEvent(new Event('input', {bubbles: true}));
+    return JSON.stringify({success: true, latex: field.latex()});
+  } catch(e){ return JSON.stringify({error: e.message}); }
+})("<LATEX>", 0)
+JSEOF
+/opt/homebrew/bin/agent-browser eval "$(cat /tmp/set_mq_latex.js)"
+```
+
+**常用 LaTeX 格式：**
+
+| 數值類型 | LaTeX | 範例 |
+|----------|-------|------|
+| 整數 | `42` | `42` |
+| 負數 | `-5` | `-5` |
+| 分數 | `\\frac{a}{b}` | `\\frac{3}{7}` → 3/7 |
+| 帶分數 | `N\\frac{a}{b}` | `5\\frac{3}{8}` → 5³⁄₈ |
+| 負分數 | `-\\frac{a}{b}` | `-\\frac{1}{3}` → -1/3 |
+| 小數 | `3.14` | `3.14` |
+| 指數 | `x^{2}` | `x^{2}` → x² |
+| 多項式 | `x^{2}-3` | `x^{2}-3` → x²-3 |
+
+#### 方法 2（備用）：mouse click + press 逐字輸入
+
+當 LaTeX API 不可用時，改用逐字輸入：
 
 ```bash
 # 點擊輸入框聚焦
@@ -114,31 +151,11 @@ JSEOF
 /opt/homebrew/bin/agent-browser press "<char1>" && /opt/homebrew/bin/agent-browser press "<char2>"
 ```
 
-### 多個輸入框
+**注意：** 逐字輸入無法可靠輸入帶分數，請優先使用方法 1。
 
-依序對每個輸入框重複「點擊 → 等待 → 輸入」：
+### 多個 MathQuill 輸入框
 
-```bash
-# 第 1 個輸入框（依類型選擇 fill 或 press）
-/opt/homebrew/bin/agent-browser mouse move <x1> <y1> && /opt/homebrew/bin/agent-browser mouse down && /opt/homebrew/bin/agent-browser mouse up
-/opt/homebrew/bin/agent-browser wait 300
-# MathQuill: press 逐字 / text-input: keyboard type
-
-# 第 2 個輸入框
-/opt/homebrew/bin/agent-browser mouse move <x2> <y2> && /opt/homebrew/bin/agent-browser mouse down && /opt/homebrew/bin/agent-browser mouse up
-/opt/homebrew/bin/agent-browser wait 300
-# MathQuill: press 逐字 / text-input: keyboard type
-```
-
-### 特殊數值輸入規則（MathQuill 專用）
-
-| 數值類型 | 按鍵序列 | 範例 |
-|----------|---------|------|
-| 整數 | 逐位數字 | `42` → press "4", "2" |
-| 負數 | 先按 `-` | `-5` → press "-", "5" |
-| 分數 | 用 `/` 分隔 | `10/7` → press "1", "0", "/", "7" |
-| 負分數 | `-` 開頭再分數 | `-1/32` → press "-", "1", "/", "3", "2" |
-| 小數 | 用 `.` | `3.14` → press "3", ".", "1", "4" |
+使用 LaTeX API 時，透過 `mqIndex` 參數指定第幾個輸入框（從 0 開始）。
 
 普通 text input 直接輸入完整數值字串即可（如 `fill @eN "3.14"`）。
 

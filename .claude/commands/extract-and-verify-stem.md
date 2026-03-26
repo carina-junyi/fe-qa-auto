@@ -48,6 +48,33 @@ cat > /tmp/extract_stem.js << 'JSEOF'
 (function(){
   var qa = document.querySelector('.question-area') || document.getElementById('workarea');
   if (!qa) return JSON.stringify({error: 'no question area'});
+
+  // MathML 結構解析（取代 textContent，正確處理分數、指數等）
+  function parseMathML(mathEl) {
+    if (!mathEl) return '';
+    var children = mathEl.children;
+    var parts = [];
+    for (var i = 0; i < children.length; i++) {
+      var el = children[i];
+      var tag = el.tagName.toLowerCase();
+      if (tag === 'mn') { parts.push(el.textContent.trim()); }
+      else if (tag === 'mi') { parts.push(el.textContent.trim()); }
+      else if (tag === 'mo') { parts.push(el.textContent.trim()); }
+      else if (tag === 'mfrac') {
+        var num = el.children[0] ? (parseMathML(el.children[0]) || el.children[0].textContent.trim()) : '?';
+        var den = el.children[1] ? (parseMathML(el.children[1]) || el.children[1].textContent.trim()) : '?';
+        parts.push('(' + num + '/' + den + ')');
+      } else if (tag === 'msup') {
+        var base = el.children[0] ? (parseMathML(el.children[0]) || el.children[0].textContent.trim()) : '?';
+        var exp = el.children[1] ? el.children[1].textContent.trim() : '?';
+        parts.push(base + '^' + exp);
+      } else if (tag === 'mrow' || tag === 'mstyle') {
+        parts.push(parseMathML(el));
+      } else { parts.push(el.textContent.trim()); }
+    }
+    return parts.join('');
+  }
+
   function ex(node) {
     var parts = [];
     for (var i = 0; i < node.childNodes.length; i++) {
@@ -59,7 +86,7 @@ cat > /tmp/extract_stem.js << 'JSEOF'
         var tag = c.tagName, cls = (c.className || '').toString();
         if (tag === 'MJX-CONTAINER') {
           var m = c.querySelector('math');
-          if (m) parts.push({type: 'math', value: m.textContent.trim()});
+          if (m) parts.push({type: 'math', value: parseMathML(m)});
         } else if (cls.indexOf('hints-area') !== -1) {
           // skip
         } else if (cls.indexOf('perseus-widget-container') !== -1) {
@@ -79,6 +106,8 @@ cat > /tmp/extract_stem.js << 'JSEOF'
 JSEOF
 /opt/homebrew/bin/agent-browser eval "$(cat /tmp/extract_stem.js)"
 ```
+
+> **重要**：`parseMathML()` 會將 MathML 的 `<mfrac>` 解析為 `(分子/分母)` 格式，避免 `textContent` 將分子分母合併的問題（如 `15/14` 被讀成 `1514`）。
 
 **判定失敗：** 回傳 `{error: ...}`、`parts` 為空、或 `eval` 報錯。
 
