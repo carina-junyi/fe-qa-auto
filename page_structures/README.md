@@ -25,8 +25,10 @@ page_structures/
 │   └── explanation-hints.md   解題說明步驟
 ├── choice/                ← 選擇題（單選 / 多選）專屬
 │   └── answer-options.md      選項按鈕
-└── fill-in/               ← 填充題專屬
-    └── answer-input.md        填充輸入框
+├── fill-in/               ← 填充題專屬
+│   └── answer-input.md        填充輸入框
+└── drag-sort/             ← 拖曳排序題專屬
+    └── answer-drag-sort.md    拖曳排序項目
 ```
 
 ## File Index
@@ -54,6 +56,12 @@ page_structures/
 | File | Element |
 |------|---------|
 | `fill-in/answer-input.md` | Fill-in text input fields |
+
+### drag-sort/ — 拖曳排序題專屬
+
+| File | Element |
+|------|---------|
+| `drag-sort/answer-drag-sort.md` | Drag-and-drop sortable items |
 
 ## File Format
 

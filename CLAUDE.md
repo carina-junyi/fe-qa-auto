@@ -85,6 +85,7 @@
 | `select` | `/qa-dropdown-question` | 解題→選擇下拉選項 |
 | `mathquill` | `/qa-fill-question` | 解題→MathQuill 逐字輸入 |
 | `text-input` | `/qa-fill-question` | 解題→普通輸入框填值 |
+| `drag-sort` | `/qa-drag-question` | 解題→鍵盤拖曳排序 |
 | 全部為空 | 不呼叫 skill | 該題標記 SKIPPED，進入「Step 5c 跳題機制」 |
 
 #### 5b. 混合題型執行順序
@@ -195,7 +196,7 @@ JSEOF
 
 ### Step 5c: 跳題機制（遇到不支援的題型時）
 
-遇到不支援的題型（如互動式座標平面畫圖、拖曳排序等）時，**不跳過整個 URL**，而是：
+遇到不支援的題型（如互動式座標平面畫圖等）時，**不跳過整個 URL**，而是：
 
 1. 該題標記為 `SKIPPED（非支援題型，請使用者手動 QA）`
 

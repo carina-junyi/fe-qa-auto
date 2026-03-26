@@ -71,6 +71,11 @@ cat > /tmp/identify_qtype.js << 'JSEOF'
 
   // 4) Radio buttons (單選)
   var radios = workarea.querySelectorAll('[role="radio"]');
+  // 降級：若 role="radio" 找不到，嘗試 perseus-radio-widget 的 label
+  if (radios.length === 0) {
+    var radioWidget = workarea.querySelector('[data-testid="perseus-radio-widget"]');
+    if (radioWidget) radios = radioWidget.querySelectorAll('label');
+  }
   Array.from(radios).forEach(function(opt, i){
     var rect = opt.getBoundingClientRect();
     var math = opt.querySelector('math');
@@ -79,7 +84,7 @@ cat > /tmp/identify_qtype.js << 'JSEOF'
       idx: i,
       label: opt.textContent.trim().substring(0, 150),
       mathText: math ? math.textContent.trim() : null,
-      checked: opt.getAttribute('aria-checked') === 'true',
+      checked: opt.checked || opt.getAttribute('aria-checked') === 'true',
       x: Math.round(rect.x + rect.width/2),
       y: Math.round(rect.y + rect.height/2)
     });
@@ -100,6 +105,24 @@ cat > /tmp/identify_qtype.js << 'JSEOF'
       y: Math.round(rect.y + rect.height/2)
     });
   });
+
+  // 6) 拖曳排序 (react-beautiful-dnd)
+  var droppable = workarea.querySelector('[data-rfd-droppable-id="droppable"]');
+  if (droppable) {
+    var dragItems = droppable.querySelectorAll('[data-rfd-draggable-id]');
+    Array.from(dragItems).forEach(function(item, i){
+      var rect = item.getBoundingClientRect();
+      var mathEl = item.querySelector('math');
+      result.elements.push({
+        type: 'drag-sort',
+        idx: i,
+        draggableId: item.getAttribute('data-rfd-draggable-id'),
+        text: mathEl ? mathEl.textContent.trim() : item.textContent.trim(),
+        x: Math.round(rect.x + rect.width/2),
+        y: Math.round(rect.y + rect.height/2)
+      });
+    });
+  }
 
   // ---- 統計摘要 ----
   var types = {};
@@ -145,6 +168,7 @@ JSEOF
 | `textbox [ref=eN]` | text-input 或 mathquill（輸入框） |
 | 多個 `radio` 角色元素 | radio（單選） |
 | 多個 `checkbox` 角色元素 | checkbox（多選） |
+| 多個連續 `button [ref=eN]` 含 math 內容 + 提示「長按再進行拖曳」 | drag-sort（拖曳排序） |
 
 ### 4. 降級 2 — Screenshot
 
@@ -174,9 +198,10 @@ JSEOF
     {type: "text-input", idx: 0, ...},
     {type: "mathquill", idx: 0, ...},
     {type: "radio", idx: 0, ...},
-    {type: "checkbox", idx: 0, ...}
+    {type: "checkbox", idx: 0, ...},
+    {type: "drag-sort", idx: 0, draggableId: "0", text: "...", ...}
   ]
-- summary: {select: N, text-input: N, mathquill: N, radio: N, checkbox: N, choiceType: "單選"/"多選"}
+- summary: {select: N, text-input: N, mathquill: N, radio: N, checkbox: N, drag-sort: N, choiceType: "單選"/"多選"}
 ```
 
 主流程會根據 `summary` 決定呼叫哪些 QA Skill（見 CLAUDE.md Step 5）。

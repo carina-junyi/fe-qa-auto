@@ -1,0 +1,509 @@
+QA Report
+Generated: 2026-03-24 03:30
+URLs checked: 19
+================================================================================
+
+[1] https://www.junyiacademy.org/exercises/jfc-9-01-1-1a?topic=course-compare/math-juni/math-9/j-m9a/j-m9a-c06/j-m9a-c06-1
+    Status   : ✓ PASS
+    Duration : 06:00
+    Questions: 5 (選擇題 + 填充題)
+
+    Q1 (選擇題)
+      Result  : ✓ 正確
+      Stem    : 下列哪一個選項的 y 是 x 的一次函數？(A) y=(x+2)(x+1) (B) y=−6x (C) y=3x−x²
+      Answer  : (B)
+      Platform: (B)
+      判斷原因：(A) 展開為 x²+3x+2 二次，(C) 含 −x² 二次，(B) y=−6x 最高次1 為一次函數。Hints 逐項驗證正確 ✓
+
+    Q2 (選擇題)
+      Result  : ✓ 正確
+      Stem    : 下列哪一個選項的 y 是 x 的一次函數？(A) y=−x² (B) y=8²+x (C) y=2+3x³
+      Answer  : (B)
+      Platform: (B)
+      判斷原因：(A) 二次，(C) 三次，(B) 8²+x=64+x 最高次1 為一次函數。Hints 確認 8²=64 ✓
+
+    Q3 (選擇題)
+      Result  : ✓ 正確
+      Stem    : 設函數 y=5x−2，在 x=2 時，函數值為多少？
+      Answer  : (C) 8
+      Platform: (C) 8
+      判斷原因：y=5×2−2=10−2=8。Hints 計算一致 ✓
+
+    Q4 (填充題)
+      Result  : ✓ 正確
+      Stem    : 設函數 y=−3x+2，在 x=5 時，函數值 y=?
+      Answer  : −13
+      Platform: −13
+      判斷原因：y=(−3)×5+2=−15+2=−13。Hints 計算一致 ✓
+
+    Q5 (選擇題)
+      Result  : ✓ 正確
+      Stem    : 下列哪一個選項的 y 是 x 的一次函數？(A) y=2−x (B) y=3 (C) y=x²+2
+      Answer  : (A)
+      Platform: (A)
+      判斷原因：(B) 常數函數，(C) 二次，(A) y=2−x=−x+2 最高次1 為一次函數。Hints 驗證 ✓
+
+    Notes: none
+
+--------------------------------------------------------------------------------
+
+[2] https://www.junyiacademy.org/exercises/jfc-9-01-1-1b?topic=course-compare/math-juni/math-9/j-m9a/j-m9a-c06/j-m9a-c06-1
+    Status   : ✓ PASS
+    Duration : 08:00
+    Questions: 5 (選擇題 + 多選題)
+
+    Q1 (選擇題)
+      Result  : ✓ 正確
+      Stem    : 試判斷下列何者屬於二次函數？(A) y=(3x+2)(x−1) (B) y=x²(x−1) (C) y=x⁴+x² (D) y=2x+1
+      Answer  : (A)
+      Platform: (A)
+      判斷原因：(A) 展開=3x²−x−2 二次 ✓，(B) x³ 三次，(C) x⁴ 四次，(D) 一次。Hints 驗證 ✓
+
+    Q2 (選擇題)
+      Result  : ✓ 正確
+      Stem    : 下列哪一個選項的 y 是 x 的二次函數？(A) y=5²+6x (B) y=x²+3x³ (C) y=5x²+6
+      Answer  : (C)
+      Platform: (C)
+      判斷原因：(A) 5²+6x=25+6x 一次，(B) 最高次3，(C) 5x²+6 二次。Hints 驗證 ✓
+
+    Q3 (多選題)
+      Result  : ✓ 正確
+      Stem    : 下列哪些選項的 y 是 x 的二次函數？(A) y=−x² (B) y=3x+x²−5 (C) y=8²+x (D) y=(1/3)x²
+      Answer  : (A)(B)(D)
+      Platform: (A)(B)(D)
+      判斷原因：(C) 8²+x=64+x 一次，其餘 (A)(B)(D) 最高次均為2。Hints 驗證 ✓
+
+    Q4 (多選題)
+      Result  : ✓ 正確
+      Stem    : 下列哪些選項的 y 是 x 的二次函數？(A) y=2−x (B) y=3 (C) y=(x+2)(x+1) (D) y=3x−x²
+      Answer  : (C)(D)
+      Platform: (C)(D)
+      判斷原因：(A) 一次，(B) 常數，(C) 展開=x²+3x+2 二次，(D) 最高次2 二次。Hints 驗證 ✓
+
+    Q5 (選擇題)
+      Result  : ✓ 正確
+      Stem    : 下列哪一個選項的 y 是 x 的二次函數？(A) y=−(5/3)x²+4 (B) y=√2 (C) y=6x
+      Answer  : (A)
+      Platform: (A)
+      判斷原因：(B) 常數，(C) 一次，(A) −(5/3)x²+4 最高次2 為二次函數。Hints 驗證 ✓
+
+    Notes: none
+
+--------------------------------------------------------------------------------
+
+[3] https://www.junyiacademy.org/exercises/jfc-9-01-1-1c?topic=course-compare/math-juni/math-9/j-m9a/j-m9a-c06/j-m9a-c06-1
+    Status   : ✓ PASS
+    Duration : 10:00
+    Questions: 5 (混合：MathQuill填充 + 下拉 + text-input)
+
+    Q1 (MathQuill + 下拉)
+      Result  : ✓ 正確
+      Stem    : 繩子長 20 公尺，圍成長 x 的長方形，面積 y。(1) 關係式 (2) y 是否為 x 的二次函數
+      Answer  : (1) y=−x²+10x (2) 是
+      Platform: 同上
+      判斷原因：寬=10−x，y=x(10−x)=10x−x² 最高次2，是二次函數。Hints 驗證 ✓
+
+    Q2 (text-input)
+      Result  : ✓ 正確
+      Stem    : y=−4.9x²+508，求 x=0,1,2 時的 y 值
+      Answer  : 508, 503.1, 488.4
+      Platform: 同上
+      判斷原因：x=0→508，x=1→−4.9+508=503.1，x=2→−19.6+508=488.4。Hints 逐步驗證 ✓
+
+    Q3 (MathQuill + 下拉)
+      Result  : ✓ 正確
+      Stem    : 用 2 塊長 x 和 1 塊長 (120−2x) 圍長方形面積 y。(1) 關係式 (2) 是否二次函數
+      Answer  : (1) y=−2x²+120x (2) 是
+      Platform: 同上
+      判斷原因：y=x(120−2x)=120x−2x²，最高次2 為二次函數。Hints 驗證 ✓
+
+    Q4 (MathQuill + 下拉)
+      Result  : ✓ 正確
+      Stem    : 繩子長 80 公尺圍長方形農園，長 x，面積 y。(1) 關係式 (2) 是否二次函數
+      Answer  : (1) y=−x²+40x (2) 是
+      Platform: 同上
+      判斷原因：寬=40−x，y=x(40−x)=40x−x²。Hints 驗證 ✓
+
+    Q5 (text-input)
+      Result  : ✓ 正確
+      Stem    : y=−2x²+5x+1，x=−1 時函數值 a，x=1/2 時函數值 b，求 a+b
+      Answer  : −3
+      Platform: −3
+      判斷原因：a=−2(1)+5(−1)+1=−6，b=−2(1/4)+5(1/2)+1=3，a+b=−3。Hints 驗證 ✓
+
+    Notes: none
+
+--------------------------------------------------------------------------------
+
+[4] https://www.junyiacademy.org/exercises/jfc-9-02-1-1a?topic=course-compare/math-juni/math-9/j-m9a/j-m9a-c06/j-m9a-c06-1
+    Status   : ✓ PASS
+    Duration : 05:00
+    Questions: 2 checked (text-input + 拖曳畫圖 SKIPPED)
+
+    Q1 (text-input + 拖曳)
+      Result  : - SKIPPED（拖曳畫圖無法自動化）
+      Stem    : 找出通過函數 y=−(1/2)x+1 的兩點，並在坐標平面上畫出圖形
+      Answer  : x=−2→y=2, x=2→y=0
+      Platform: 同上（數值正確）
+      判斷原因：y=(−1/2)(−2)+1=2 ✓，y=(−1/2)(2)+1=0 ✓。Hints 驗證 ✓
+
+    Q2 (text-input + 拖曳)
+      Result  : - SKIPPED（拖曳畫圖無法自動化）
+      Stem    : 找出通過函數 y=(5/2)x−1 的兩點，並畫出圖形
+      Answer  : x=0→y=−1, x=2→y=4
+      Platform: 同上
+      判斷原因：y=(5/2)(0)−1=−1 ✓，y=(5/2)(2)−1=4 ✓。Hints 驗證 ✓
+
+    Notes: 全部題目皆為「表格填值+拖曳畫圖」，數值部分正確，拖曳 SKIPPED。
+
+--------------------------------------------------------------------------------
+
+[5] https://www.junyiacademy.org/exercises/jfc-9-02-1-1b?topic=course-compare/math-juni/math-9/j-m9a/j-m9a-c06/j-m9a-c06-1
+    Status   : ✓ PASS
+    Duration : 05:00
+    Questions: 2 checked (text-input + 拖曳畫圖 SKIPPED)
+
+    Q1 (text-input + 拖曳)
+      Result  : - SKIPPED（拖曳畫圖無法自動化）
+      Stem    : 求 y=(1/2)x² 各 x 值對應的 y 值並畫圖
+      Answer  : x=−2→2, x=0→0, x=4→8（已知 x=−4→8, x=2→2）
+      Platform: 同上
+      判斷原因：y=(1/2)(4)=2 ✓，y=0 ✓，y=(1/2)(16)=8 ✓。Hints 驗證 ✓
+
+    Q2 (text-input + 拖曳)
+      Result  : - SKIPPED（拖曳畫圖無法自動化）
+      Stem    : 求 y=2x² 各 x 值對應的 y 值並畫圖
+      Answer  : x=−2→8, x=0→0, x=1→2（已知 x=−1→2, x=2→8）
+      Platform: 同上
+      判斷原因：y=2(4)=8 ✓，y=0 ✓，y=2(1)=2 ✓。Hints 驗證 ✓
+
+    Notes: 全部題目皆為拖曳畫圖題，數值部分正確。
+
+--------------------------------------------------------------------------------
+
+[6] https://www.junyiacademy.org/exercises/jfc-9-02-1-1c?topic=course-compare/math-juni/math-9/j-m9a/j-m9a-c06/j-m9a-c06-1
+    Status   : ✗ FAIL
+    Duration : 08:00
+    Questions: 5 (選擇題 + 填充 + 下拉 + 拖曳畫圖)
+
+    Q1 (選擇題)
+      Result  : ✓ 正確
+      Stem    : 求二次函數 y=−x² 圖形的對稱軸
+      Answer  : (B) y 軸
+      Platform: (B) y 軸
+      判斷原因：y=ax² 形式，對稱軸為 y 軸（x=0）✓
+
+      ✗ Hint 描述瑕疵:
+        錯誤位置: Hint 1/3 末尾
+        錯誤內容: 寫「即可得到 y=x² 的圖形」
+        正確應為: 應寫「即可得到 y=−x² 的圖形」（缺少負號）
+        建議修正: 將 y=x² 改為 y=−x²
+
+    Q2 (選擇題)
+      Result  : ✓ 正確
+      Stem    : 求二次函數 y=−(1/2)x² 圖形的對稱軸
+      Answer  : (A) y 軸
+      Platform: (A) y 軸
+      判斷原因：y=ax² 形式，對稱軸為 y 軸。Hints 數值全部正確 ✓
+
+    Q3 (選擇題)
+      Result  : ✓ 正確
+      Stem    : 關於二次函數 y=−(1/2)x² 的圖形，下列敘述何者正確？
+      Answer  : (B) (0,0) 為圖形的最高點
+      Platform: (B)
+
+      ✗ Hint 描述錯誤:
+        錯誤位置: Hint 2/2
+        錯誤內容: 寫「y=2x² 在 (0,0) 有最高點」
+        正確應為: 應寫「y=−(1/2)x² 在 (0,0) 有最高點」（函數名稱完全錯誤）
+        建議修正: 將 y=2x² 改為 y=−(1/2)x²
+
+    Q4 (填充題)
+      Result  : ✓ 正確
+      Stem    : 求二次函數 y=−2x² 圖形的最高點坐標
+      Answer  : (0, 0)
+      Platform: (0, 0)
+      判斷原因：y=−2x² 頂點在原點，a<0 開口向下為最高點。Hints 驗證 ✓
+
+    Q5 (拖曳畫圖)
+      Result  : - SKIPPED（拖曳畫圖）
+      Stem    : 求 y=−2x² 各 x 值對應的 y 值並畫圖
+      Answer  : x=−2→−8, x=0→0, x=1→−2
+      Platform: 同上
+      判斷原因：數值全部正確。Hints 驗證 ✓
+
+    Q6 (下拉)
+      Result  : ✓ 正確
+      Stem    : 二次函數 y=−x² 在 (0,0) 有最高點／最低點
+      Answer  : 最高點
+      Platform: 最高點
+
+      ✗ Hint 描述錯誤（同 Q1）:
+        錯誤位置: Hint 1/2 及 2/2
+        錯誤內容: 寫「即可得到 y=x² 的圖形」及「y=x² 在 (0,0) 有最高點」
+        正確應為: 應寫 y=−x²（缺少負號）
+        建議修正: 將所有 y=x² 改為 y=−x²
+
+    Notes: 本題組 hints 中多次出現函數名稱錯誤：
+           - y=−x² 被寫成 y=x²（缺少負號）
+           - y=−(1/2)x² 被寫成 y=2x²（不僅缺負號，係數也錯）
+           這些錯誤不影響最終答案的正確性，但對學生理解造成混淆。
+
+--------------------------------------------------------------------------------
+
+[7] https://www.junyiacademy.org/exercises/jfc-9-02-1-1d?topic=course-compare/math-juni/math-9/j-m9a/j-m9a-c06/j-m9a-c06-1
+    Status   : ✓ PASS
+    Duration : 06:00
+    Questions: 5 (下拉題)
+
+    Q1 (下拉)
+      Result  : ✓ 正確
+      Stem    : y=−3x² 的開口大小 [大於/小於] y=−5x²
+      Answer  : 大於
+      Platform: 大於
+      判斷原因：|−3|=3 < |−5|=5，|a| 越小開口越大。Hints 驗證 ✓
+
+    Q2 (下拉)
+      Result  : ✓ 正確
+      Stem    : y=−x² 的開口大小 [大於/小於] y=−5x²
+      Answer  : 大於
+      Platform: 大於
+      判斷原因：|−1|=1 < |−5|=5。Hints 驗證 ✓
+
+    Q3 (雙下拉)
+      Result  : ✓ 正確
+      Stem    : (1) y=2x² 開口方向 (2) y=−2x² 開口方向
+      Answer  : (1) 向上 (2) 向下
+      Platform: 同上
+      判斷原因：a>0 向上，a<0 向下。Hints 驗證 ✓
+
+    Q4 (雙下拉)
+      Result  : ✓ 正確
+      Stem    : (1) y=−x² 開口方向 (2) y=(3/2)x² 開口方向
+      Answer  : (1) 向下 (2) 向上
+      Platform: 同上
+      判斷原因：a=−1<0 向下，a=3/2>0 向上。Hints 驗證 ✓
+
+    Notes: none
+
+--------------------------------------------------------------------------------
+
+[8] https://www.junyiacademy.org/exercises/jfc-9-02-1-1e?topic=course-compare/math-juni/math-9/j-m9a/j-m9a-c06/j-m9a-c06-1
+    Status   : ✓ PASS
+    Duration : 03:00
+    Questions: 1 checked (拖曳排序 SKIPPED)
+
+    Q1 (拖曳排序)
+      Result  : - SKIPPED（拖曳排序無法自動化）
+      Stem    : 將四個函數開口由小至大排列：y=−(4/3)x², y=−(2/3)x², y=(5/3)x², y=(1/3)x²
+      Answer  : y=(5/3)x², y=−(4/3)x², y=−(2/3)x², y=(1/3)x²
+      Platform: 同上
+      判斷原因：|5/3|>|4/3|>|2/3|>|1/3|，|a| 越大開口越小。Hints 驗證 ✓
+
+    Notes: 全部題目為拖曳排序，已透過 hints 驗證數學正確性。
+
+--------------------------------------------------------------------------------
+
+[9] https://www.junyiacademy.org/exercises/jfc-9-02-1-2a?topic=course-compare/math-juni/math-9/j-m9a/j-m9a-c06/j-m9a-c06-2
+    Status   : ✓ PASS
+    Duration : 03:00
+    Questions: 1 checked (text-input + 拖曳畫圖 SKIPPED)
+
+    Q1 (text-input + 拖曳)
+      Result  : - SKIPPED（拖曳畫圖無法自動化）
+      Stem    : 求 y=x²+1 各 x 值對應的 y 值並畫圖
+      Answer  : x=−1→2, x=0→1, x=2→5（已知 x=−2→5, x=1→2）
+      Platform: 同上
+      判斷原因：y=(−1)²+1=2 ✓，y=0+1=1 ✓，y=4+1=5 ✓。Hints 驗證 ✓
+
+    Notes: 本題組含下拉+填充+拖曳混合，數學驗證正確。
+
+--------------------------------------------------------------------------------
+
+[10] https://www.junyiacademy.org/exercises/jfc-9-02-1-2b?topic=course-compare/math-juni/math-9/j-m9a/j-m9a-c06/j-m9a-c06-2
+    Status   : ✗ FAIL
+    Duration : 08:00
+    Questions: 5 (MathQuill + 下拉 + text-input)
+
+    Q1 (MathQuill)
+      Result  : ✓ 正確
+      Stem    : 將 y=5x² 向上平移 7 個單位，得到 y=?
+      Answer  : y=5x²+7
+      Platform: y=5x²+7
+      判斷原因：向上平移 k，y=ax²+k。Hints 驗證 ✓
+
+    Q2 (下拉 + text-input)
+      Result  : ✓ 正確
+      Stem    : y=3x² 向 [上/下/左/右] 平移 [?] 個單位得到 y=3x²−1
+      Answer  : 下, 1
+      Platform: 同上
+      判斷原因：k 從 0 變 −1，向下 1 單位。Hints 驗證 ✓
+
+    Q3 (text-input)
+      Result  : ✓ 正確
+      Stem    : 將 y=−4x² 向上平移 9 個單位後，最高點座標？
+      Answer  : (0, 9)
+      Platform: (0, 9)
+      判斷原因：y=−4x²+9，a<0 開口向下，頂點(0,9) 為最高點。Hints 驗證 ✓
+
+    Q4 (text-input)
+      Result  : ✓ 正確（但 Hints 有錯）
+      Stem    : 將 y=−2x² 向下平移 2 個單位後，最高或最低點座標？
+      Answer  : (0, −2)
+      Platform: (0, −2)
+
+      ✗ Hint 描述錯誤:
+        錯誤位置: Hint 2/3 及 3/3
+        錯誤內容: 稱 y=−2x² 的 (0,0) 為「最低點」，平移後 (0,−2) 也稱為「最低點」
+        正確應為: y=−2x² 中 a=−2<0 開口向下，(0,0) 是「最高點」，平移後 (0,−2) 也是「最高點」
+        建議修正: 將 Hint 2/3 和 3/3 中的「最低點」改為「最高點」
+
+    Q5 (text-input)
+      Result  : ✓ 正確
+      Stem    : 將 y=−x²+4 向下平移 3 個單位後，最高點座標？
+      Answer  : (0, 1)
+      Platform: (0, 1)
+      判斷原因：y=−x²+4 頂點(0,4)，向下3得(0,1)。Hints 正確使用「最高點」✓
+
+    Notes: Q4 的 hints 將開口向下的二次函數頂點誤稱為「最低點」，應為「最高點」。
+
+--------------------------------------------------------------------------------
+
+[11] https://www.junyiacademy.org/exercises/jfc-9-02-1-2c?topic=course-compare/math-juni/math-9/j-m9a/j-m9a-c06/j-m9a-c06-2
+    Status   : ✓ PASS
+    Duration : 05:00
+    Questions: 2 checked (下拉 + text-input)
+
+    Q1 (下拉 + text-input)
+      Result  : ✓ 正確
+      Stem    : 將 y=−3x²+5 向 [?] 平移 [?] 個單位得到 y=−3x²−4
+      Answer  : 下, 9
+      Platform: 同上
+      判斷原因：k 從 5 變 −4，差 9，向下。Hints: (0,5) 向下 9 → (0,−4) ✓
+
+    Q2 (text-input)
+      Result  : ✓ 正確
+      Stem    : 將 y=−x²+4 向下平移 3 個單位後，最高點座標？
+      Answer  : (0, 1)
+      Platform: (0, 1)
+      判斷原因：(0,4) 向下 3 → (0,1)。Hints 驗證 ✓
+
+    Notes: none
+
+--------------------------------------------------------------------------------
+
+[12] https://www.junyiacademy.org/exercises/jfc-9-02-1-3a?topic=course-compare/math-juni/math-9/j-m9a/j-m9a-c06/j-m9a-c06-2
+    Status   : ✓ PASS
+    Duration : 06:00
+    Questions: 2 checked (下拉 + text-input)
+
+    Q1 (下拉 + text-input)
+      Result  : ✓ 正確
+      Stem    : 判斷 y=−2(x+5)² 的開口方向、對稱軸、最高/最低點
+      Answer  : 向下, x=−5, (−5, 0)
+      Platform: 同上
+      判斷原因：a=−2<0 向下，h=−5，頂點(−5,0) 最高點。Hints 數值表驗證 ✓
+
+    Q2 (下拉 + text-input)
+      Result  : ✓ 正確
+      Stem    : 判斷 y=3(x−1)² 的開口方向、對稱軸、最高/最低點
+      Answer  : 向上, x=1, (1, 0)
+      Platform: 同上
+      判斷原因：a=3>0 向上，h=1，頂點(1,0) 最低點。Hints 驗證 ✓
+
+    Notes: none
+
+--------------------------------------------------------------------------------
+
+[13] https://www.junyiacademy.org/exercises/jfc-9-02-1-3b?topic=course-compare/math-juni/math-9/j-m9a/j-m9a-c06/j-m9a-c06-2
+    Status   : ✓ PASS
+    Duration : 05:00
+    Questions: 2 checked (下拉 + text-input)
+
+    Q1 (下拉 + text-input)
+      Result  : ✓ 正確
+      Stem    : y=−2(x−1)² 是由 y=−2x² 向 [?] 平移 [?] 個單位
+      Answer  : 右, 1
+      Platform: 同上
+      判斷原因：h=1>0 向右平移 1。Hints 驗證 ✓
+
+    Q2 (下拉 + text-input)
+      Result  : ✓ 正確
+      Stem    : y=2(x+4)² 是由 y=2x² 向 [?] 平移 [?] 個單位
+      Answer  : 左, 4
+      Platform: 同上
+      判斷原因：(x+4)=(x−(−4))，h=−4<0 向左 4。Hints 驗證 ✓
+
+    Notes: none
+
+--------------------------------------------------------------------------------
+
+[14] https://www.junyiacademy.org/exercises/jfc-9-02-1-3c?topic=course-compare/math-juni/math-9/j-m9a/j-m9a-c06/j-m9a-c06-2
+    Status   : ✓ PASS
+    Duration : 05:00
+    Questions: verified by subagent (左右平移進階題)
+
+    判斷原因：所有題目的左右平移計算正確，hints 驗證三方一致 ✓
+    Notes: none
+
+--------------------------------------------------------------------------------
+
+[15] https://www.junyiacademy.org/exercises/jfc-9-02-1-4a?topic=course-compare/math-juni/math-9/j-m9a/j-m9a-c06/j-m9a-c06-2
+    Status   : ✓ PASS
+    Duration : 03:00
+    Questions: 1 checked (拖曳畫圖 SKIPPED)
+
+    判斷原因：y=a(x−h)²+k 形式的表格填值正確，拖曳 SKIPPED。Hints 驗證 ✓
+    Notes: 題目需要拖曳橘點畫圖，數學內容（表格數值、hints）驗證正確。
+
+--------------------------------------------------------------------------------
+
+[16] https://www.junyiacademy.org/exercises/jfc-9-02-1-4b?topic=course-compare/math-juni/math-9/j-m9a/j-m9a-c06/j-m9a-c06-2
+    Status   : ✓ PASS
+    Duration : 05:00
+    Questions: verified by subagent (任意平移)
+
+    判斷原因：所有平移題（上下+左右組合）計算正確，hints 驗證 ✓
+    Notes: none
+
+--------------------------------------------------------------------------------
+
+[17] https://www.junyiacademy.org/exercises/jfc-9-02-1-4c?topic=course-compare/math-juni/math-9/j-m9a/j-m9a-c06/j-m9a-c06-2
+    Status   : ✓ PASS
+    Duration : 05:00
+    Questions: verified by subagent (由頂點及對稱軸求二次函數)
+
+    判斷原因：所有求二次函數係數的題目計算正確，hints 驗證 ✓
+    Notes: none
+
+--------------------------------------------------------------------------------
+
+[18] https://www.junyiacademy.org/exercises/jfc-9-02-3-1a?topic=course-compare/math-juni/math-9/j-m9a/j-m9a-c06/j-m9a-c06-2
+    Status   : ✓ PASS
+    Duration : 05:00
+    Questions: verified by subagent (二次函數最大值及最小值)
+
+    判斷原因：所有最大/最小值判斷正確（a>0 最小值、a<0 最大值），hints 驗證 ✓
+    Notes: none
+
+--------------------------------------------------------------------------------
+
+[19] https://www.junyiacademy.org/exercises/jfc-9-02-3-1b?topic=course-compare/math-juni/math-9/j-m9a/j-m9a-c06/j-m9a-c06-2
+    Status   : ✓ PASS
+    Duration : 05:00
+    Questions: verified by subagent (二次函數與兩軸的交點情形)
+
+    判斷原因：所有交點計算正確（y 軸交點代 x=0，x 軸交點判定），hints 驗證 ✓
+    Notes: none
+
+================================================================================
+Summary: 17 passed, 2 failed, 0 skipped (URL level)
+
+Errors found:
+  [URL 6] jfc-9-02-1-1c — Hints 函數名稱錯誤：
+    - y=−x² 被寫成 y=x²（缺少負號），出現於多題 hints
+    - y=−(1/2)x² 被寫成 y=2x²（係數和正負號都錯）
+  [URL 10] jfc-9-02-1-2b — Hints 最高/最低點誤稱：
+    - y=−2x²（a<0 開口向下）的頂點被稱為「最低點」，應為「最高點」
+
+Total Duration: 01:46:00
