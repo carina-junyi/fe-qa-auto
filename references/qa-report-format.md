@@ -15,7 +15,7 @@ URLs checked: <N>
     Duration : <mm:ss>
     Questions: <total count>
 
-    Q1 (<type: 單選/多選/填充>)
+    Q1 (<type: 單選/多選/填充>) [qid: <question id>]
       Result  : ✓ 正確  |  ✗ 錯誤
       Stem    : <reconstructed question text>
       Answer  : <my calculated answer>

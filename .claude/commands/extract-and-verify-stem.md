@@ -6,7 +6,40 @@
 
 ---
 
-## Step 1: DOM 擷取題幹
+## Step 1: 擷取 qid
+
+在擷取題幹前，先取得該題的 qid（題目識別碼）：
+
+```bash
+cat > /tmp/extract_qid.js << 'JSEOF'
+(function(){
+  try {
+    var E = window.Exercises;
+    if (E && E.PerseusBridge) {
+      var seedInfo = E.PerseusBridge.getSeedInfo();
+      return JSON.stringify({
+        qid: seedInfo.problem_type || E.PerseusBridge.quizPid,
+        sha1: seedInfo.sha1,
+        seed: seedInfo.seed
+      });
+    }
+  } catch(e){}
+  // Fallback: performance API
+  var entries = performance.getEntriesByType('resource');
+  var qids = [];
+  entries.forEach(function(e){
+    var match = e.name.match(/[?&]qid=(\d+)/);
+    if (match) qids.push(match[1]);
+  });
+  return JSON.stringify({qid: qids.length > 0 ? qids[qids.length - 1] : null, method: 'performance-fallback'});
+})()
+JSEOF
+/opt/homebrew/bin/agent-browser eval "$(cat /tmp/extract_qid.js)"
+```
+
+記錄回傳的 `qid`，供後續寫入 QA_result.txt。
+
+## Step 2: DOM 擷取題幹
 
 使用 `page_structures/shared/question-stem.md` 中的 JS extraction 程式碼，或以下通用版本：
 
@@ -49,7 +82,7 @@ JSEOF
 
 **判定失敗：** 回傳 `{error: ...}`、`parts` 為空、或 `eval` 報錯。
 
-## Step 2: 降級擷取
+## Step 3: 降級擷取
 
 ### 降級 1 — Snapshot
 
@@ -71,7 +104,7 @@ JSEOF
 1. 記錄到 QA_result.txt Notes：`DOM extraction failed for stem, fell back to snapshot/screenshot`
 2. 觸發 `page_structures/shared/question-stem.md` 的更新探索
 
-## Step 3: 驗證題幹數學正確性
+## Step 4: 驗證題幹數學正確性
 
 檢查擷取到的題幹：
 
@@ -87,6 +120,7 @@ JSEOF
 
 ```
 題幹擷取與驗證結果：
+- qid: <題目識別碼，如 140541>
 - method: DOM / snapshot / screenshot
 - stemText: <重建的題幹文字>
 - stemParts: [{type, value}]

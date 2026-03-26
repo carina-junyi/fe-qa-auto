@@ -14,7 +14,8 @@
 - Status（PASS / FAIL / SKIPPED）
 - Duration（該 URL 從開始到完成的耗時，格式 mm:ss）
 - 每題的：
-  - 題型（單選/多選/填充）
+  - qid（題目識別碼，從 `Exercises.PerseusBridge.getSeedInfo().problem_type` 取得）
+  - 題型（單選/多選/填充/拖曳排序）
   - 重建題幹
   - 自己計算的答案
   - 平台的正確答案
