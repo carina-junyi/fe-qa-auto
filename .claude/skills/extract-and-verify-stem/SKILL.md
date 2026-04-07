@@ -1,3 +1,8 @@
+---
+name: extract-and-verify-stem
+description: Extract and Verify Stem (擷取並驗證題幹)
+---
+
 # Extract and Verify Stem (擷取並驗證題幹)
 
 擷取目前題目的題幹內容，並驗證其中的數學是否正確。

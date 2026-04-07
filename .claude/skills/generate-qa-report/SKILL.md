@@ -1,3 +1,8 @@
+---
+name: generate-qa-report
+description: Generate QA Report (產生 QA 報告)
+---
+
 # Generate QA Report (產生 QA 報告)
 
 收集所有 URL 的 QA 結果，依照 `references/qa-report-format.md` 的格式產生 `QA_result.txt`。

@@ -1,3 +1,8 @@
+---
+name: qa-dropdown-question
+description: QA Dropdown Question (下拉選單題 QA 流程)
+---
+
 # QA Dropdown Question (下拉選單題 QA 流程)
 
 針對頁面中的下拉式選單（`<select>`）元素執行答案選擇。此 skill 僅處理 `<select>` 元素，不處理文字輸入框或 MathQuill。

@@ -1,3 +1,8 @@
+---
+name: resolve-urls
+description: Resolve URLs (展開資料夾連結)
+---
+
 # Resolve URLs (展開資料夾連結)
 
 掃描 `urls/url_list.txt`，將資料夾 URL 展開為底下的題目 URL。

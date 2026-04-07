@@ -1,304 +1,312 @@
 QA Report
-Generated: 2026-03-27 00:30
-URLs checked: 8
+Generated: 2026-04-02 12:30
+URLs checked: 10
 ================================================================================
 
-[1] https://www.junyiacademy.org/exercises/j-m-basic-f-2-2-1
+[1] https://www.junyiacademy.org/exercises/mcenter-g-10-6-2-1
     Status   : ✓ PASS
     Duration : 05:00
-    Questions: 5
+    Questions: 3
 
-    Q1 (填充) [qid: 117991]
+    Q1 (單選) [qid: 142540]
       Result  : ✓ 正確
-      Stem    : 籤筒裡有 27 支籤，被抽出的結果有___種。每種機率都是___。
-      Answer  : 27, 1/27
-      Platform: 27, 1/27
+      Stem    : 關於 A,B,C,D 四點的極坐標，何者正確？
+      Answer  : (5) D[1, -180°]
+      Platform: (5)
 
       判斷原因：
-        27 支籤等機率，每種結果 1/27。Hints 確認 n 種等機率結果 → 每種 1/n。
+        極坐標 [r,θ] 中 r 必為正數。-180° 與 180° 為同界角，D 在 180° 方向距離 1。Hints 確認。
 
-    Q2 (填充) [qid: 117992]
+    Q2 (單選) [qid: 142541]
       Result  : ✓ 正確
-      Stem    : 6 人抽禮物，每種結果機率都是___。
-      Answer  : 1/6
-      Platform: 1/6
+      Stem    : 330° 的同界角？
+      Answer  : (4) -30°
+      Platform: (4)
 
       判斷原因：
-        6 人等機率，每人 1/6。
+        330° - (-30°) = 360°。Hints 確認。
 
-    Q3 (填充) [qid: 117993]
+    Q3 (單選) [qid: 142542]
       Result  : ✓ 正確
-      Stem    : 13 個乒乓球，每種結果機率都是___。
-      Answer  : 1/13
-      Platform: 1/13
+      Stem    : 哪個廣義角是第三象限角？
+      Answer  : (2) 260°
+      Platform: (2)
 
       判斷原因：
-        13 球等機率，每球 1/13。
-
-    Q4 (下拉) [qid: 117994]
-      Result  : ✓ 正確
-      Stem    : 判斷正誤：(1) n 種結果每種機率 1/n (2) 長方體每面朝上 1/6 (3) 70% 一定下雨
-      Answer  : ╳, ╳, ╳
-      Platform: ╳, ╳, ╳
-
-      判斷原因：
-        (1) 需等機率前提才成立 (2) 長方體各面大小不同 (3) 70% 不等於一定。Hints 逐項驗證正確。
-
-    Q5 (下拉) [qid: 117995]
-      Result  : ✓ 正確
-      Stem    : 判斷正誤：(1) 樂透中獎 1/2 (2) 比腕力勝率 1/2 (3) 四選一猜對 1/4
-      Answer  : ╳, ╳, ○
-      Platform: ╳, ╳, ○
-
-      判斷原因：
-        (1)(2) 非等機率 (3) 隨機猜 4 選 1 = 1/4。Hints 確認。
+        180° < 260° < 270° 在第三象限。Hints 確認。
 
     Notes: none
 
 --------------------------------------------------------------------------------
-[2] https://www.junyiacademy.org/exercises/j-m-basic-f-2-2-2
+[2] https://www.junyiacademy.org/exercises/mcenter-g-10-6-2-2
     Status   : ✓ PASS
-    Duration : 08:00
-    Questions: 5
+    Duration : 05:00
+    Questions: 3
 
-    Q1 (填充) [qid: 117996]
+    Q1 (單選) [qid: 142543]
       Result  : ✓ 正確
-      Stem    : 35 個乒乓球 1-35 號，(1) 抽中 35 號機率 (2) 抽中 18 號機率
-      Answer  : 1/35, 1/35
-      Platform: 1/35, 1/35
+      Stem    : 銳角三角比定義，何者不正確？
+      Answer  : (3) cosθ = 對邊/鄰邊
+      Platform: (3)
 
       判斷原因：
-        35 球等機率，每球 1/35。
+        cosθ 應為鄰邊/斜邊，不是對邊/鄰邊。Hints 確認。
 
-    Q2 (填充) [qid: 117997]
+    Q2 (單選) [qid: 142544]
       Result  : ✓ 正確
-      Stem    : 公正骰子出現 4 點的機率
-      Answer  : 1/6
-      Platform: 1/6
+      Stem    : 廣義角三角比定義 P(x,y), OP=r，何者正確？
+      Answer  : (3) cosθ = x/r
+      Platform: (3)
 
       判斷原因：
-        6 面等機率，每面 1/6。
+        sinθ=y/r, cosθ=x/r, tanθ=y/x。Hints 確認。
 
-    Q3 (填充) [qid: 117998]
+    Q3 (單選) [qid: 142545]
       Result  : ✓ 正確
-      Stem    : 8 球 M,A,T,H,L,O,V,E，(1) E 機率 (2) M 機率
-      Answer  : 1/8, 1/8
-      Platform: 1/8, 1/8
+      Stem    : 單位圓中線段的三角比名稱，何者正確？
+      Answer  : (5) CD 為正切
+      Platform: (5)
 
       判斷原因：
-        8 球等機率。
-
-    Q4 (填充) [qid: 117999]
-      Result  : ✓ 正確
-      Stem    : 4 紅 5 黃 6 綠球，(1) 紅球 (2) 黃球 (3) 不是綠球 機率
-      Answer  : 4/15, 1/3, 3/5
-      Platform: 4/15, 1/3, 3/5
-
-      判斷原因：
-        共 15 球。紅 4/15，黃 5/15=1/3，非綠 9/15=3/5。Hints 確認。
-
-    Q5 (填充) [qid: 118000]
-      Result  : ✓ 正確
-      Stem    : 20 球 1-20，(1) 偶數 (2) 5 的倍數 (3) 2 和 3 的倍數 機率
-      Answer  : 1/2, 1/5, 3/20
-      Platform: 1/2, 1/5, 3/20
-
-      判斷原因：
-        偶數 10 個→1/2，5 倍數{5,10,15,20}→4/20=1/5，6 倍數{6,12,18}→3/20。Hints 確認。
+        AB=正弦, OB=餘弦, CD=正切（切線段）。Hints 確認。
 
     Notes: none
 
 --------------------------------------------------------------------------------
-[3] https://www.junyiacademy.org/exercises/j-m-basic-f-2-2-3
-    Status   : ✓ PASS
-    Duration : 04:00
-    Questions: 2
-
-    Q1 (填充) [qid: 118001]
-      Result  : ✓ 正確
-      Stem    : 公正骰子 (1) 3 點 (2) 奇數 (3) >5 (4) 0 點 機率
-      Answer  : 1/6, 1/2, 1/6, 0
-      Platform: 1/6, 1/2, 1/6, 0
-
-      判斷原因：
-        6 面。3 點→1/6，奇數{1,3,5}→3/6=1/2，>5 只有 6→1/6，0 不存在→0。Hints 逐項確認。
-
-    Q2 (填充) [qid: 118002]
-      Result  : ✓ 正確
-      Stem    : 12 面骰 (1) 5 點 (2) 4 倍數 (3) ≤7 (4) 13 點 機率
-      Answer  : 1/12, 1/4, 7/12, 0
-      Platform: 1/12, 1/4, 7/12, 0
-
-      判斷原因：
-        12 面。5→1/12，4 倍{4,8,12}→3/12=1/4，≤7 有 7 個→7/12，13 不存在→0。Hints 確認。
-
-    Notes: none
-
---------------------------------------------------------------------------------
-[4] https://www.junyiacademy.org/exercises/j-m-basic-f-2-2-4
-    Status   : ✗ FAIL
-    Duration : 04:00
-    Questions: 2
-
-    Q1 (填充) [qid: 118003]
-      Result  : ✓ 正確
-      Stem    : 60 支籤 (1) 11 倍數 (2) 2 和 5 倍數 (3) 奇數 (4) 61 機率
-      Answer  : 1/12, 1/10, 1/2, 0
-      Platform: 1/12, 1/10, 1/2, 0
-
-      判斷原因：
-        11 倍{11,22,33,44,55}=5→5/60=1/12。10 倍{10,20,30,40,50,60}=6→6/60=1/10。奇數 30→1/2。61 不存在→0。Hints 確認。
-
-    Q2 (填充) [qid: 118004]
-      Result  : ✗ 錯誤（Hint 摘要）
-      Stem    : 912 班 26 人，男 1-15，女 21-31。(1) 男生 (2) 偶數 (3) 男生且偶數 機率
-      Answer  : 15/26, 6/13, 7/26
-      Platform: 15/26, 6/13, 7/26
-
-      錯誤描述與建議修正：
-        錯誤位置: Hint 3/3 摘要答案
-        錯誤內容: 第 (2) 題偶數機率寫 (1/2)
-        正確應為: (6/13)（Hint 2/3 計算 12/26=6/13 正確，但 3/3 摘要寫錯）
-        建議修正: 將 Hint 3/3 的 (1/2) 改為 (6/13)
-
-    Notes: 平台接受的答案 6/13 正確。Hint 計算過程（2/3）正確，但摘要（3/3）不一致。
-
---------------------------------------------------------------------------------
-[5] https://www.junyiacademy.org/exercises/j-m-basic-f-2-2-5
-    Status   : ✓ PASS
-    Duration : 04:00
-    Questions: 2
-
-    Q1 (填充) [qid: 118005]
-      Result  : ✓ 正確
-      Stem    : 52 張撲克牌 (1) 梅花 3 (2) 方塊 (3) 2 (4) 英文字母 (5) 紅色 機率
-      Answer  : 1/52, 1/4, 1/13, 4/13, 1/2
-      Platform: 1/52, 1/4, 1/13, 4/13, 1/2
-
-      判斷原因：
-        52 張 4 花色 13 種。梅花 3→1/52，方塊 13→1/4，2 有 4 張→1/13，字母 AJQK×4=16→4/13，紅 26→1/2。Hints 確認。
-
-    Q2 (填充) [qid: 118006]
-      Result  : ✓ 正確
-      Stem    : 52 張 (1) 方塊 8 (2) 紅色 J (3) 黑色 (4) 數字 (5) 紅色英文字母 機率
-      Answer  : 1/52, 1/26, 1/2, 9/13, 2/13
-      Platform: 1/52, 1/26, 1/2, 9/13, 2/13
-
-      判斷原因：
-        方塊 8→1/52，紅 J 2 張→1/26，黑 26→1/2，數字 9 種×4=36→9/13，紅+字母 4×2=8→2/13。Hints 確認。
-
-    Notes: none
-
---------------------------------------------------------------------------------
-[6] https://www.junyiacademy.org/exercises/j-m-basic-f-2-2-6
-    Status   : ✓ PASS
-    Duration : 08:00
-    Questions: 4
-
-    Q1 (填充) [qid: 118007]
-      Result  : ✓ 正確
-      Stem    : 2 個小孩男女等機率 (1) 結果數 (2) 都女 (3) 一男一女 (4) 先男後女 機率
-      Answer  : 4, 1/4, 1/2, 1/4
-      Platform: 4, 1/4, 1/2, 1/4
-
-      判斷原因：
-        4 種（男男,男女,女男,女女）。都女 1→1/4，一男一女 2→1/2，男女順序 1→1/4。Hints 確認。
-
-    Q2 (填充) [qid: 118008]
-      Result  : ✓ 正確
-      Stem    : 4 上衣×3 裙子 (1) 搭配數 (2) 白上衣 (3) 同色 機率
-      Answer  : 12, 1/4, 1/6
-      Platform: 12, 1/4, 1/6
-
-      判斷原因：
-        12 種。白上衣 3 種→1/4，同色（白白,黑黑）2→1/6。Hints 確認。
-
-    Q3 (填充) [qid: 118009]
-      Result  : ✓ 正確
-      Stem    : 硬幣×骰子 (1) 結果數 (2) 正面+3 (3) 反面+奇數 (4) 正面+>4 機率
-      Answer  : 12, 1/12, 1/4, 1/6
-      Platform: 12, 1/12, 1/4, 1/6
-
-      判斷原因：
-        2×6=12。正面+3→1/12，反面+奇{1,3,5}→3/12=1/4，正面+{5,6}→2/12=1/6。Hints 確認。
-
-    Q4 (填充) [qid: 118010]
-      Result  : ✓ 正確
-      Stem    : 甲乙丙 3 人排序 (1) 排列數 (2) 甲第一 (3) 丙比乙先 機率
-      Answer  : 6, 1/3, 1/2
-      Platform: 6, 1/3, 1/2
-
-      判斷原因：
-        3!=6。甲第一 2!/6=1/3，丙在乙前 3/6=1/2（對稱性）。Hints 確認。
-
-    Notes: none
-
---------------------------------------------------------------------------------
-[7] https://www.junyiacademy.org/exercises/j-m-basic-f-2-2-7
-    Status   : ✓ PASS
-    Duration : 04:00
-    Questions: 2
-
-    Q1 (填充) [qid: 118011]
-      Result  : ✓ 正確
-      Stem    : 兩人各有 1,2,3 牌比大小，采軒獲勝機率
-      Answer  : 1/3
-      Platform: 1/3
-
-      判斷原因：
-        9 種結果，贏 3 種（2>1,3>1,3>2）→1/3。Hints：贏 3、輸 3、平 3。
-
-    Q2 (填充) [qid: 118012]
-      Result  : ✓ 正確
-      Stem    : 兩人各擲骰子比大小 (1) 瑞妤贏 (2) 品希贏 (3) 平手 機率
-      Answer  : 5/12, 5/12, 1/6
-      Platform: 5/12, 5/12, 1/6
-
-      判斷原因：
-        36 種。平手 6→1/6，對稱性各贏 15→15/36=5/12。Hints：0+1+2+3+4+5=15 確認。
-
-    Notes: none
-
---------------------------------------------------------------------------------
-[8] https://www.junyiacademy.org/exercises/j-m-basic-f-2-2-8
+[3] https://www.junyiacademy.org/exercises/mcenter-g-10-6-2-3
     Status   : ✓ PASS
     Duration : 06:00
     Questions: 3
 
-    Q1 (填充) [qid: 118013]
+    Q1 (單選) [qid: 142546]
       Result  : ✓ 正確
-      Stem    : 骰子擲兩次，點數和為 7 的機率
-      Answer  : 1/6
-      Platform: 1/6
+      Stem    : cos310° 近似值？
+      Answer  : (4) 0.6428
+      Platform: (4)
 
       判斷原因：
-        36 種。和 7：{(1,6)(2,5)(3,4)(4,3)(5,2)(6,1)}=6→6/36=1/6。Hints 確認。
+        310° 在 Q4，cos 為正。cos310° = cos(360°-50°) = cos50° ≈ 0.6428。Hints 確認。
 
-    Q2 (填充) [qid: 118014]
+    Q2 (單選) [qid: 142547]
       Result  : ✓ 正確
-      Stem    : 兩骰子點數和為 10 的數對及機率
-      Answer  : (4,6)(5,5)(6,4), 1/12
-      Platform: 6,5,4, 1/12
+      Stem    : P(-3,-1) 在角 θ 終邊上，三角比何者正確？
+      Answer  : (3) tanθ = 1/3
+      Platform: (3)
 
       判斷原因：
-        和 10：3 種→3/36=1/12。Hints 確認。
+        r=√10, tanθ=y/x=(-1)/(-3)=1/3。Hints 確認。
 
-    Q3 (填充) [qid: 118015]
+    Q3 (單選) [qid: 142548]
       Result  : ✓ 正確
-      Stem    : 甲袋{1,2,3,4}乙袋{1,2,3}各取一球 (1) 結果數 (2) 和為奇數機率
-      Answer  : 12, 1/2
-      Platform: 12, 1/2
+      Stem    : P(a,-3) 在角 θ 終邊，cosθ=-3/5，求 a
+      Answer  : (5) -9/4
+      Platform: (5)
 
       判斷原因：
-        4×3=12。奇+偶或偶+奇=2×1+2×2=6→6/12=1/2。Hints：奇偶各半。
+        x:y:r=(-3):(-4):5, a/(-3)=(-3)/(-4), a=-9/4。Hints 確認。
 
     Notes: none
 
-================================================================================
-Summary: 7 passed, 1 failed, 0 skipped
-Total Duration: ~43:00
+--------------------------------------------------------------------------------
+[4] https://www.junyiacademy.org/exercises/mcenter-g-10-6-2-4
+    Status   : ✓ PASS
+    Duration : 08:00
+    Questions: 4
 
-★ 發現的錯誤：
-  - [4] j-m-basic-f-2-2-4 Q2 [qid: 118004]
-    Hint 3/3 摘要答案第 (2) 題偶數機率寫 (1/2)，應為 (6/13)
-    Hint 2/3 計算過程 12/26=6/13 正確，摘要與過程不一致
+    Q1 (單選) [qid: 142549]
+      Result  : ✓ 正確
+      Stem    : 廣義角 θ 終邊與單位圓交點坐標 (x,y)？
+      Answer  : (4) (cosθ, sinθ)
+      Platform: (4)
+
+      判斷原因：
+        單位圓 r=1, x=cosθ, y=sinθ。Hints 確認。
+
+    Q2 (單選) [qid: 142550]
+      Result  : ✓ 正確
+      Stem    : 交點 (-0.6,-0.8)，何者正確？
+      Answer  : (2) cosθ = -0.6
+      Platform: (2)
+
+      判斷原因：
+        (cosθ, sinθ) = (-0.6, -0.8)。Hints 確認。
+
+    Q3 (單選) [qid: 142551]
+      Result  : ✓ 正確
+      Stem    : 單位圓觀察，何者不正確？
+      Answer  : (3) 第二象限角 cosθ 皆為正數
+      Platform: (3)
+
+      判斷原因：
+        Q2 中 x<0 故 cosθ<0。Hints 確認。
+
+    Q4 (單選) [qid: 142551]
+      Result  : ✓ 正確
+      Stem    : 同上（重複題）
+      Answer  : (3)
+      Platform: (3)
+
+      判斷原因：
+        同上。
+
+    Notes: 選項 (2)「Q3 sinθ 正數」也是錯的，但平台只接受 (3)。題目設計有兩個錯誤選項但為單選。
+
+--------------------------------------------------------------------------------
+[5] https://www.junyiacademy.org/exercises/mcenter-g-10-6-2-5
+    Status   : ✓ PASS
+    Duration : 05:00
+    Questions: 3
+
+    Q1 (單選) [qid: 142552]
+      Result  : ✓ 正確
+      Stem    : P(x,y) 在 θ 終邊，Q(-x,-y) 在哪個角的終邊？
+      Answer  : (3) 180°+θ
+      Platform: (3)
+
+      判斷原因：
+        (-x,-y) 對稱原點 = 旋轉 180°。Hints 確認。
+
+    Q2 (單選) [qid: 142553]
+      Result  : ✓ 正確
+      Stem    : sin30°=1/2，何者正確？
+      Answer  : (5) sin330° = -1/2
+      Platform: (5)
+
+      判斷原因：
+        sin330° = sin(360°-30°) = -sin30° = -1/2。Hints 確認。
+
+    Q3 (單選) [qid: 142554]
+      Result  : ✓ 正確
+      Stem    : 廣義三角比值何者正確？
+      Answer  : (4) tan225° = 1
+      Platform: (4)
+
+      判斷原因：
+        tan225° = tan(180°+45°) = tan45° = 1。Hints 確認。
+
+    Notes: none
+
+--------------------------------------------------------------------------------
+[6] https://www.junyiacademy.org/exercises/mcenter-g-10-7-2-6
+    Status   : ✓ PASS
+    Duration : 06:00
+    Questions: 3
+
+    Q1 (單選) [qid: 142555]
+      Result  : ✓ 正確
+      Stem    : △ABC, ∠C=90°, DF⊥AC, DE⊥AB，何者不正確？
+      Answer  : (3) ∠B = ∠EDF
+      Platform: (3)
+
+      判斷原因：
+        ∠EDF = ∠A（非 ∠B）。Hints：∠B≠∠EDF。
+
+    Q2 (單選) [qid: 142556]
+      Result  : ✓ 正確
+      Stem    : 直角△, AB=5 斜邊，BC 長？
+      Answer  : (1) 5sinA
+      Platform: (1)
+
+      判斷原因：
+        sinA = BC/AB → BC = 5sinA。Hints 確認。
+
+    Q3 (單選) [qid: 142557]
+      Result  : ✓ 正確
+      Stem    : 直角△, AC=5 一股，BC 長？
+      Answer  : (4) 5tanA
+      Platform: (4)
+
+      判斷原因：
+        tanA = BC/AC → BC = 5tanA。Hints 確認。
+
+    Notes: Q2 的 Hint 結論寫 "AC=AB sinA" 應為 "BC=AB sinA"（變數名稱誤植），但計算過程和答案值正確。
+
+--------------------------------------------------------------------------------
+[7] https://www.junyiacademy.org/exercises/mcenter-g-10-7-2-7
+    Status   : ✓ PASS
+    Duration : 08:00
+    Questions: 3
+
+    Q1 (單選) [qid: 142558]
+      Result  : ✓ 正確
+      Stem    : 哪個式子正確？（平方關係）
+      Answer  : (4) cos²5° + sin²5° = 1
+      Platform: (4)
+
+      判斷原因：
+        sin²θ + cos²θ = 1（同一角）。Hints 確認。
+
+    Q2 (單選) [qid: 142559]
+      Result  : ✓ 正確
+      Stem    : sin220°=a，則 cos220°=？
+      Answer  : (4) -√(1-a²)
+      Platform: (4)
+
+      判斷原因：
+        220° 在 Q3, cos<0 → cos220° = -√(1-sin²220°) = -√(1-a²)。Hints 確認。
+
+    Q3 (單選) [qid: 142560]
+      Result  : ✓ 正確
+      Stem    : θ 為 Q2，cos²θ=2sinθ，求 sinθ
+      Answer  : (4) √2 - 1
+      Platform: (4)
+
+      判斷原因：
+        sin²θ + 2sinθ - 1 = 0 → sinθ = -1±√2。Q2 sinθ>0 → √2-1。Hints 確認。
+
+    Notes: none
+
+--------------------------------------------------------------------------------
+[8] https://www.junyiacademy.org/exercises/mcenter-g-10-7-2-8
+    Status   : ✓ PASS
+    Duration : 05:00
+    Questions: 1 (單一題反覆出現)
+
+    Q1 (單選) [qid: 142561]
+      Result  : ✓ 正確
+      Stem    : sinθ=1/3, tanθ=-1/(2√2)，求 cosθ
+      Answer  : (5) -2√2/3
+      Platform: (5)
+
+      判斷原因：
+        tanθ = sinθ/cosθ → cosθ = sinθ/tanθ = (1/3)/(-1/(2√2)) = -2√2/3。Hints 確認。
+
+    Notes: 此題組只有 1 題反覆出現，透過 hints 驗證數學正確性。
+
+--------------------------------------------------------------------------------
+[9] https://www.junyiacademy.org/exercises/mcenter-g-10-7-2-9
+    Status   : ✓ PASS
+    Duration : 04:00
+    Questions: 1 (單一題反覆出現)
+
+    Q1 (單選) [qid: 142564]
+      Result  : ✓ 正確
+      Stem    : 直角△ABC, ∠C=90°，何者正確？
+      Answer  : (3) cosA = sinB
+      Platform: (3)
+
+      判斷原因：
+        A+B=90° → cosA = cos(90°-B) = sinB（餘角關係）。Hints 確認。
+
+    Notes: 此題組只有 1 題反覆出現。
+
+--------------------------------------------------------------------------------
+[10] https://www.junyiacademy.org/exercises/mcenter-g-10-7-2-10
+    Status   : ✓ PASS
+    Duration : 04:00
+    Questions: 1 (單一題反覆出現)
+
+    Q1 (單選) [qid: 142567]
+      Result  : ✓ 正確
+      Stem    : PQ 在直線 L 上的正射影？
+      Answer  : (3) AC
+      Platform: (3)
+
+      判斷原因：
+        P 垂足為 A，Q 垂足為 C，正射影 = AC。Hints 確認。
+
+    Notes: 此題組只有 1 題反覆出現。
+
+================================================================================
+Summary: 10 passed, 0 failed, 0 skipped
+Total Duration: ~55:00

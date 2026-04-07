@@ -1,3 +1,8 @@
+---
+name: probe-page
+description: Probe Page (頁面探測)
+---
+
 # Probe Page (頁面探測)
 
 開啟頁面後，探測頁面結構與題組資訊。

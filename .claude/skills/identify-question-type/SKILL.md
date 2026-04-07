@@ -1,3 +1,8 @@
+---
+name: identify-question-type
+description: Identify Question Type (判斷題型)
+---
+
 # Identify Question Type (判斷題型)
 
 掃描目前瀏覽器中開啟的 Junyi Academy 練習頁面，偵測**所有互動元素**，回傳元素清單供主流程分派對應的 QA Skill。

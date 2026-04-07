@@ -1,3 +1,8 @@
+---
+name: qa-choice-question
+description: QA Choice Question (選擇題 QA 流程)
+---
+
 # QA Choice Question (選擇題 QA 流程)
 
 針對頁面中的單選（radio）或多選（checkbox）元素執行答案選擇。
