@@ -51,16 +51,16 @@ Step 8: Generate QA report
 ├── urls/
 │   └── url_list.txt             # URLs to QA (with status)
 ├── .claude/
-│   └── commands/                # Skill definitions
-│       ├── resolve-urls.md          # Step 0: expand folder URLs
-│       ├── probe-page.md           # Step 2: page structure detection
-│       ├── extract-and-verify-stem.md # Step 3: qid + stem extraction
-│       ├── identify-question-type.md  # Step 4: element detection
-│       ├── qa-choice-question.md    # Step 5: radio/checkbox
-│       ├── qa-fill-question.md      # Step 5: MathQuill/text input
-│       ├── qa-dropdown-question.md  # Step 5: <select>
-│       ├── qa-drag-question.md      # Step 5: drag-sort
-│       └── generate-qa-report.md    # Step 8: QA report
+│   └── skills/                  # Skill definitions (SKILL.md format)
+│       ├── resolve-urls/            # Step 0: expand folder URLs
+│       ├── probe-page/             # Step 2: page structure detection
+│       ├── extract-and-verify-stem/ # Step 3: qid + stem extraction
+│       ├── identify-question-type/  # Step 4: element detection
+│       ├── qa-choice-question/      # Step 5: radio/checkbox
+│       ├── qa-fill-question/        # Step 5: MathQuill/text input
+│       ├── qa-dropdown-question/    # Step 5: <select>
+│       ├── qa-drag-question/        # Step 5: drag-sort
+│       └── generate-qa-report/      # Step 8: QA report
 ├── page_structures/             # DOM selectors & JS extraction
 │   ├── shared/                      # Common elements
 │   ├── choice/                      # Radio/checkbox options
