@@ -286,11 +286,15 @@ JSEOF
 
 ### Step 8: Generate QA Report（所有 URL 完成後）
 
+檢查是否有任何 URL 的狀態為 `Fail`。**若有 Fail，必須產生報告：**
+
 ```
 /generate-qa-report
 ```
 
 收集所有 URL 的 QA 結果，產生 `QA_result.txt`。
+
+若全部 Pass（無 Fail），則不需要產生報告。
 
 ---
 
