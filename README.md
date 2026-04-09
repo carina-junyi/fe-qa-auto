@@ -80,9 +80,34 @@ Step 8: Generate QA report
 
 ## Usage
 
-1. Add exercise or folder URLs to `urls/url_list.txt` (one per line, status `ToDo`)
-2. Run Claude Code in this directory
-3. Claude will automatically execute the QA workflow per CLAUDE.md
+### 1. 準備 URL 清單
+
+在 `urls/url_list.txt` 中貼上要 QA 的 URL（每行一個），支援兩種格式：
+
+```
+# 資料夾連結（自動展開為底下的所有題目）
+https://www.junyiacademy.org/course-compare/math-elem/math-6/j-m6a/j-m6a-c08/jrc-6-01-2 ToDo
+
+# 單題連結（直接 QA）
+https://www.junyiacademy.org/exercises/mcenter-g-10-6-2-1?topic=... ToDo
+```
+
+> **注意**：若該資料夾的題組為**隱藏題組**（頁面無法公開存取），則不支援資料夾連結的形式。
+> 此時需要將每一組題目的 URL 逐一貼上，例如：
+> ```
+> https://www.junyiacademy.org/exercises/mcenter-g-10-7-2-11?topic=... ToDo
+> https://www.junyiacademy.org/exercises/mcenter-g-10-7-2-12?topic=... ToDo
+> https://www.junyiacademy.org/exercises/mcenter-g-10-7-2-13?topic=... ToDo
+> ```
+
+### 2. 執行 QA
+
+在此目錄下啟動 Claude Code，Claude 會依照 [CLAUDE.md](CLAUDE.md) 自動執行完整 QA 流程。
+
+### 3. 查看結果
+
+- `urls/url_list.txt` — 每個 URL 的狀態會更新為 `Pass` / `Fail` / `Skipped`
+- `QA_result.txt` — 詳細的 QA 報告（含每題 qid、題幹、答案、hints 驗證結果）
 
 ## Key Features
 
