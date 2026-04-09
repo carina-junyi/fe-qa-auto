@@ -109,6 +109,23 @@ https://www.junyiacademy.org/exercises/mcenter-g-10-6-2-1?topic=... ToDo
 - `urls/url_list.txt` — 每個 URL 的狀態會更新為 `Pass` / `Fail` / `Skipped`
 - `QA_result.txt` — 詳細的 QA 報告（含每題 qid、題幹、答案、hints 驗證結果）
 
+## Known Limitations
+
+### 隨機出題的題組無法測試所有題目
+平台的練習題組採用隨機出題機制，需要連續答對特定題數才算通過。通過後題組即結束，因此**無法遍歷題庫中的所有題目**，只會測到平台隨機抽到的題目。
+
+### 部分題型不支援自動化
+遇到不支援的題型（如互動式座標平面畫圖）時，該題會標記為 `SKIPPED`，並透過 reload 跳到下一題繼續 QA。若整個題組的所有題目都是不支援的題型，該 URL 會標記為 `Skipped`。
+
+目前不支援的題型：
+| 題型 | 原因 |
+|------|------|
+| 座標平面拖曳畫圖（Raphael/SVG） | 需要在 canvas 上拖曳點，無法透過鍵盤或 API 操作 |
+
+### QA 報告產生規則
+- 有任何 URL 為 `Fail` → 自動產生 `QA_result.txt`
+- 全部 `Pass` → 不產生報告
+
 ## Key Features
 
 ### MathQuill LaTeX API
