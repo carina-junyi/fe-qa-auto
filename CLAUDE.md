@@ -21,6 +21,7 @@
   | `InProgress` | 正在 QA | Step 1 |
   | `Pass` | 無數學錯誤 | Step 6 |
   | `Fail` | 有數學錯誤 | Step 6 |
+  | `Warn` | 數學內容正確（透過 API 備援確認），但 browser 操作有困難，頁面渲染未完整驗證 | Step 6 |
 
   **只處理 `ToDo`（或無狀態）的 URL。** 以 `#` 開頭的行為註解，會被略過。
 
@@ -74,6 +75,27 @@
 ```
 
 探測頁面結構、題組資訊、關鍵元素 ref。
+
+### Step 2b: 累積型題組策略（exerciseMode = exercise 時）
+
+當 `/probe-page` 回傳 `exerciseMode: "exercise"` 時，需要特殊處理：
+
+1. **目標**：驗證題目池中的**所有題目**，而非只做到「答對 N 題」就停止。
+
+2. **Hint-first 策略**：每題先點開 `#hint`（至少點一次），再填答提交。
+   平台會將該題標記為 `hintused`（不計入答對累積），確保不會因為累積答對而提早結束。
+
+3. **qid 覆蓋追蹤**：
+   - 從 `/probe-page` 的 API 偵察取得完整 qid 清單
+   - 每做完一題，記錄該題的 qid
+   - 若當前題目的 qid 已經驗證過 → 仍然用 hint-first 提交跳過，但不重複驗證 hints
+   - 持續做題直到所有 qid 都覆蓋過
+
+4. **注意**：累積型為隨機出題，可能重複出到已驗證過的題目。
+   當剩餘未覆蓋的 qid 越來越少時，重複機率會提高。
+   若連續 10 題都是已驗證過的 qid，可合理判斷已覆蓋所有題目。
+
+> 依序型（`sequential_quiz`）不需要此策略，直接按現有流程逐題做完即可。
 
 ### Step 3: Extract and Verify Stem
 
@@ -272,7 +294,8 @@ JSEOF
 ### Step 6: Update url_list.txt
 
 - 所有題目皆正確 → `Pass`
-- 任一題有錯誤 → `Fail`
+- 任一題有數學錯誤 → `Fail`
+- 數學內容正確，但 browser 操作遇到困難而使用了 API 備援 → `Warn`
 - 記錄該 URL 的 QA 結束時間，計算耗時（Duration），供 QA_result.txt 使用。
 
 ### Step 7: Next Question (if in a question group)
@@ -286,7 +309,7 @@ JSEOF
 
 ### Step 8: Generate QA Report（所有 URL 完成後）
 
-檢查是否有任何 URL 的狀態為 `Fail`。**若有 Fail，必須產生報告：**
+檢查是否有任何 URL 的狀態為 `Fail` 或 `Warn`。**若有 Fail 或 Warn，必須產生報告：**
 
 ```
 /generate-qa-report
@@ -294,7 +317,7 @@ JSEOF
 
 收集所有 URL 的 QA 結果，產生 `QA_result.txt`。
 
-若全部 Pass（無 Fail），則不需要產生報告。
+若全部 Pass（無 Fail 也無 Warn），則不需要產生報告。
 
 ---
 

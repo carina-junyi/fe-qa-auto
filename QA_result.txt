@@ -1,312 +1,113 @@
 QA Report
-Generated: 2026-04-02 12:30
-URLs checked: 10
+Generated: 2026-04-22 16:40
+URLs checked: 1
 ================================================================================
 
-[1] https://www.junyiacademy.org/exercises/mcenter-g-10-6-2-1
-    Status   : ✓ PASS
-    Duration : 05:00
-    Questions: 3
+[1] https://www.junyiacademy.org/exercises/mcenter-10-2-1-gsat-macom?topic=course-compare/math-high/math-10/j-m10a/j-m10a-c04/j-m10a-c04-lca
+    Status   : ✗ FAIL
+    Duration : 25:00
+    Questions: 12
 
-    Q1 (單選) [qid: 142540]
+    Q1 (單選) [qid: 141674]
       Result  : ✓ 正確
-      Stem    : 關於 A,B,C,D 四點的極坐標，何者正確？
-      Answer  : (5) D[1, -180°]
-      Platform: (5)
+      Stem    : (111A-4) 等差數列 <a_n> 首項 a₁ 與公差 d 皆正，log a₁, log a₃, log a₆ 成等差。求公差。
+      Answer  : log(3/2)
+      Platform: (3) log(3/2)
 
       判斷原因：
-        極坐標 [r,θ] 中 r 必為正數。-180° 與 180° 為同界角，D 在 180° 方向距離 1。Hints 確認。
+        a₃²=a₁·a₆ → (a₁+2d)²=a₁(a₁+5d) → 4d²=a₁d → a₁=4d
+        公差 = log(a₃/a₁) = log(6d/4d) = log(3/2)
+        Hints 10 步推導皆正確，與自己計算一致。
 
-    Q2 (單選) [qid: 142541]
+    Q2 (多選) [qid: 141675]
+      Result  : ✗ 錯誤
+      Stem    : (112A-7) 甲乙起薪相同，甲每滿3月加200，乙每滿12月加1000。選出正確選項。
+      Answer  : (3)(5)
+      Platform: (3)(5)
+
+      錯誤描述與建議修正：
+        錯誤位置: Explain step 4/6
+        錯誤內容: Hint 寫「乙增加 12×0+8×1000=8000 元」，其中「8個月」有誤。
+                  工作滿18個月時，乙在第13-18月（共6個月）有加薪1000元，
+                  所以乙的增加額應為 6×1000=6000 元，不是 8×1000=8000 元。
+        正確應為: 乙增加 = 12×0 + 6×1000 = 6000 元
+        建議修正: 將 Hint 4/6 中的「8×1000=8000」改為「6×1000=6000」。
+                  結論「甲比乙多」仍然正確（9000 > 6000），不影響選項判斷。
+
+    Q3 (多選) [qid: 141676]
       Result  : ✓ 正確
-      Stem    : 330° 的同界角？
-      Answer  : (4) -30°
-      Platform: (4)
+      Stem    : (112A-9) 等比數列首項3、公比3√3。log₃a₁-log₃a₂+...+(-1)^(n+1)log₃aₙ > 18，求n。
+      Answer  : (3)(5)，即 n=25 或 27
+      Platform: (3)(5)
 
       判斷原因：
-        330° - (-30°) = 360°。Hints 確認。
+        n奇=2k-1時 S=1+(3/2)(k-1)>18 → k>37/3 → n≥25（奇數）
+        n偶時 S<0，不合。
+        Hints 6步推導皆正確。
 
-    Q3 (單選) [qid: 142542]
+    Q4 (填充) [qid: 141677]
       Result  : ✓ 正確
-      Stem    : 哪個廣義角是第三象限角？
-      Answer  : (2) 260°
-      Platform: (2)
+      Stem    : (112B-14) 1-20取3個a<b<c成等差，求取法數。
+      Answer  : 90
+      Platform: 90
 
       判斷原因：
-        180° < 260° < 270° 在第三象限。Hints 確認。
+        b≤10→從{1,...,10}選2；b≥11→從{11,...,20}選2。
+        2×C(10,2) = 90。Hints 正確。
 
-    Notes: none
+    Q5 (多選) [qid: 141678]
+      Result  : ✗ 錯誤
+      Stem    : (113A-8) Tₙ邊長n,n+1,n+2。選出正確選項。
+      Answer  : (2)(3)
+      Platform: (2)(3)
 
---------------------------------------------------------------------------------
-[2] https://www.junyiacademy.org/exercises/mcenter-g-10-6-2-2
-    Status   : ✓ PASS
-    Duration : 05:00
-    Questions: 3
+      錯誤描述與建議修正：
+        錯誤位置: Explain step 6/7
+        錯誤內容: Hint 寫「cos θ₃=0，θ₃=90°。θ₂為鈍角，故 θ₃ > θ₂」。
+                  但 90° < 鈍角（鈍角>90°），所以應為 θ₃ < θ₂，不是 θ₃ > θ₂。
+        正確應為: θ₃ = 90° < θ₂ ≈ 104.5°，故 θ₃ < θ₂
+        建議修正: 將「故 θ₃ > θ₂」改為「故 θ₃ < θ₂」。
+                  結論「選項(5)錯誤」仍然正確（T₃最大角不大於T₂最大角），
+                  但推理方向寫反了。
 
-    Q1 (單選) [qid: 142543]
+    Q6 (多選) [qid: 141679]
       Result  : ✓ 正確
-      Stem    : 銳角三角比定義，何者不正確？
-      Answer  : (3) cosθ = 對邊/鄰邊
-      Platform: (3)
+      Stem    : (113B-8) 正實數等比數列a,b,c,d,e(a<b<c<d<e)，選出下列為等比數列的選項。
+      Answer  : (1)(2)(5)
+      Platform: (1)(2)(5)
 
       判斷原因：
-        cosθ 應為鄰邊/斜邊，不是對邊/鄰邊。Hints 確認。
+        (1) 公比-r ✓; (2) 公比1/r ✓; (3) 等差非等比 ✗;
+        (4) 3^a等比值不等 ✗; (5) abc,bcd,cde公比r³ ✓。
+        Hints 正確。
 
-    Q2 (單選) [qid: 142544]
+    Q7 (多選) [qid: 141680]
       Result  : ✓ 正確
-      Stem    : 廣義角三角比定義 P(x,y), OP=r，何者正確？
-      Answer  : (3) cosθ = x/r
-      Platform: (3)
+      Stem    : (114A-7) 3a_{n+1}=a_n+n, a₁=2, b_n=a_n-n/2+3/4。選出正確選項。
+      Answer  : (2)(4)
+      Platform: (2)(4)
 
       判斷原因：
-        sinθ=y/r, cosθ=x/r, tanθ=y/x。Hints 確認。
+        (1) a₂=1≠2 ✗; (2) b₂=3/4 ✓; (3) 公比1/3非2/3 ✗;
+        (4) 3ⁿaₙ皆正整數 ✓; (5) b₁₀=1/8748>10⁻⁴ ✗。
+        Hints 7步推導皆正確。
 
-    Q3 (單選) [qid: 142545]
+    Q8 (多選) [qid: 141681]
       Result  : ✓ 正確
-      Stem    : 單位圓中線段的三角比名稱，何者正確？
-      Answer  : (5) CD 為正切
-      Platform: (5)
+      Stem    : (114B-12) AP首項1末項81，含9，n≤100。選出正確選項。
+      Answer  : (1)(2)
+      Platform: (1)(2)
 
       判斷原因：
-        AB=正弦, OB=餘弦, CD=正切（切線段）。Hints 確認。
+        md=8(m正整數)，n=10m+1，m=1~9共9個。
+        (1) n皆奇 ✓; (2) 41=1+5md必在數列 ✓; (3) d可非整數 ✗;
+        (4) 共9個非10個 ✗; (5) n=21或91皆為7倍數 ✗。
+        Hints 8步推導皆正確。
 
-    Notes: none
-
---------------------------------------------------------------------------------
-[3] https://www.junyiacademy.org/exercises/mcenter-g-10-6-2-3
-    Status   : ✓ PASS
-    Duration : 06:00
-    Questions: 3
-
-    Q1 (單選) [qid: 142546]
-      Result  : ✓ 正確
-      Stem    : cos310° 近似值？
-      Answer  : (4) 0.6428
-      Platform: (4)
-
-      判斷原因：
-        310° 在 Q4，cos 為正。cos310° = cos(360°-50°) = cos50° ≈ 0.6428。Hints 確認。
-
-    Q2 (單選) [qid: 142547]
-      Result  : ✓ 正確
-      Stem    : P(-3,-1) 在角 θ 終邊上，三角比何者正確？
-      Answer  : (3) tanθ = 1/3
-      Platform: (3)
-
-      判斷原因：
-        r=√10, tanθ=y/x=(-1)/(-3)=1/3。Hints 確認。
-
-    Q3 (單選) [qid: 142548]
-      Result  : ✓ 正確
-      Stem    : P(a,-3) 在角 θ 終邊，cosθ=-3/5，求 a
-      Answer  : (5) -9/4
-      Platform: (5)
-
-      判斷原因：
-        x:y:r=(-3):(-4):5, a/(-3)=(-3)/(-4), a=-9/4。Hints 確認。
-
-    Notes: none
-
---------------------------------------------------------------------------------
-[4] https://www.junyiacademy.org/exercises/mcenter-g-10-6-2-4
-    Status   : ✓ PASS
-    Duration : 08:00
-    Questions: 4
-
-    Q1 (單選) [qid: 142549]
-      Result  : ✓ 正確
-      Stem    : 廣義角 θ 終邊與單位圓交點坐標 (x,y)？
-      Answer  : (4) (cosθ, sinθ)
-      Platform: (4)
-
-      判斷原因：
-        單位圓 r=1, x=cosθ, y=sinθ。Hints 確認。
-
-    Q2 (單選) [qid: 142550]
-      Result  : ✓ 正確
-      Stem    : 交點 (-0.6,-0.8)，何者正確？
-      Answer  : (2) cosθ = -0.6
-      Platform: (2)
-
-      判斷原因：
-        (cosθ, sinθ) = (-0.6, -0.8)。Hints 確認。
-
-    Q3 (單選) [qid: 142551]
-      Result  : ✓ 正確
-      Stem    : 單位圓觀察，何者不正確？
-      Answer  : (3) 第二象限角 cosθ 皆為正數
-      Platform: (3)
-
-      判斷原因：
-        Q2 中 x<0 故 cosθ<0。Hints 確認。
-
-    Q4 (單選) [qid: 142551]
-      Result  : ✓ 正確
-      Stem    : 同上（重複題）
-      Answer  : (3)
-      Platform: (3)
-
-      判斷原因：
-        同上。
-
-    Notes: 選項 (2)「Q3 sinθ 正數」也是錯的，但平台只接受 (3)。題目設計有兩個錯誤選項但為單選。
-
---------------------------------------------------------------------------------
-[5] https://www.junyiacademy.org/exercises/mcenter-g-10-6-2-5
-    Status   : ✓ PASS
-    Duration : 05:00
-    Questions: 3
-
-    Q1 (單選) [qid: 142552]
-      Result  : ✓ 正確
-      Stem    : P(x,y) 在 θ 終邊，Q(-x,-y) 在哪個角的終邊？
-      Answer  : (3) 180°+θ
-      Platform: (3)
-
-      判斷原因：
-        (-x,-y) 對稱原點 = 旋轉 180°。Hints 確認。
-
-    Q2 (單選) [qid: 142553]
-      Result  : ✓ 正確
-      Stem    : sin30°=1/2，何者正確？
-      Answer  : (5) sin330° = -1/2
-      Platform: (5)
-
-      判斷原因：
-        sin330° = sin(360°-30°) = -sin30° = -1/2。Hints 確認。
-
-    Q3 (單選) [qid: 142554]
-      Result  : ✓ 正確
-      Stem    : 廣義三角比值何者正確？
-      Answer  : (4) tan225° = 1
-      Platform: (4)
-
-      判斷原因：
-        tan225° = tan(180°+45°) = tan45° = 1。Hints 確認。
-
-    Notes: none
-
---------------------------------------------------------------------------------
-[6] https://www.junyiacademy.org/exercises/mcenter-g-10-7-2-6
-    Status   : ✓ PASS
-    Duration : 06:00
-    Questions: 3
-
-    Q1 (單選) [qid: 142555]
-      Result  : ✓ 正確
-      Stem    : △ABC, ∠C=90°, DF⊥AC, DE⊥AB，何者不正確？
-      Answer  : (3) ∠B = ∠EDF
-      Platform: (3)
-
-      判斷原因：
-        ∠EDF = ∠A（非 ∠B）。Hints：∠B≠∠EDF。
-
-    Q2 (單選) [qid: 142556]
-      Result  : ✓ 正確
-      Stem    : 直角△, AB=5 斜邊，BC 長？
-      Answer  : (1) 5sinA
-      Platform: (1)
-
-      判斷原因：
-        sinA = BC/AB → BC = 5sinA。Hints 確認。
-
-    Q3 (單選) [qid: 142557]
-      Result  : ✓ 正確
-      Stem    : 直角△, AC=5 一股，BC 長？
-      Answer  : (4) 5tanA
-      Platform: (4)
-
-      判斷原因：
-        tanA = BC/AC → BC = 5tanA。Hints 確認。
-
-    Notes: Q2 的 Hint 結論寫 "AC=AB sinA" 應為 "BC=AB sinA"（變數名稱誤植），但計算過程和答案值正確。
-
---------------------------------------------------------------------------------
-[7] https://www.junyiacademy.org/exercises/mcenter-g-10-7-2-7
-    Status   : ✓ PASS
-    Duration : 08:00
-    Questions: 3
-
-    Q1 (單選) [qid: 142558]
-      Result  : ✓ 正確
-      Stem    : 哪個式子正確？（平方關係）
-      Answer  : (4) cos²5° + sin²5° = 1
-      Platform: (4)
-
-      判斷原因：
-        sin²θ + cos²θ = 1（同一角）。Hints 確認。
-
-    Q2 (單選) [qid: 142559]
-      Result  : ✓ 正確
-      Stem    : sin220°=a，則 cos220°=？
-      Answer  : (4) -√(1-a²)
-      Platform: (4)
-
-      判斷原因：
-        220° 在 Q3, cos<0 → cos220° = -√(1-sin²220°) = -√(1-a²)。Hints 確認。
-
-    Q3 (單選) [qid: 142560]
-      Result  : ✓ 正確
-      Stem    : θ 為 Q2，cos²θ=2sinθ，求 sinθ
-      Answer  : (4) √2 - 1
-      Platform: (4)
-
-      判斷原因：
-        sin²θ + 2sinθ - 1 = 0 → sinθ = -1±√2。Q2 sinθ>0 → √2-1。Hints 確認。
-
-    Notes: none
-
---------------------------------------------------------------------------------
-[8] https://www.junyiacademy.org/exercises/mcenter-g-10-7-2-8
-    Status   : ✓ PASS
-    Duration : 05:00
-    Questions: 1 (單一題反覆出現)
-
-    Q1 (單選) [qid: 142561]
-      Result  : ✓ 正確
-      Stem    : sinθ=1/3, tanθ=-1/(2√2)，求 cosθ
-      Answer  : (5) -2√2/3
-      Platform: (5)
-
-      判斷原因：
-        tanθ = sinθ/cosθ → cosθ = sinθ/tanθ = (1/3)/(-1/(2√2)) = -2√2/3。Hints 確認。
-
-    Notes: 此題組只有 1 題反覆出現，透過 hints 驗證數學正確性。
-
---------------------------------------------------------------------------------
-[9] https://www.junyiacademy.org/exercises/mcenter-g-10-7-2-9
-    Status   : ✓ PASS
-    Duration : 04:00
-    Questions: 1 (單一題反覆出現)
-
-    Q1 (單選) [qid: 142564]
-      Result  : ✓ 正確
-      Stem    : 直角△ABC, ∠C=90°，何者正確？
-      Answer  : (3) cosA = sinB
-      Platform: (3)
-
-      判斷原因：
-        A+B=90° → cosA = cos(90°-B) = sinB（餘角關係）。Hints 確認。
-
-    Notes: 此題組只有 1 題反覆出現。
-
---------------------------------------------------------------------------------
-[10] https://www.junyiacademy.org/exercises/mcenter-g-10-7-2-10
-    Status   : ✓ PASS
-    Duration : 04:00
-    Questions: 1 (單一題反覆出現)
-
-    Q1 (單選) [qid: 142567]
-      Result  : ✓ 正確
-      Stem    : PQ 在直線 L 上的正射影？
-      Answer  : (3) AC
-      Platform: (3)
-
-      判斷原因：
-        P 垂足為 A，Q 垂足為 C，正射影 = AC。Hints 確認。
-
-    Notes: 此題組只有 1 題反覆出現。
+    Notes: Q2 與 Q5 的 hints 各有一處數學表述錯誤（詳見上方）。
+           Q2 hint 4/6 乙的加薪月數 8→6；Q5 hint 6/7 角度大小方向寫反。
+           兩處錯誤都不影響最終選項判斷（結論正確），但推理過程有誤。
 
 ================================================================================
-Summary: 10 passed, 0 failed, 0 skipped
-Total Duration: ~55:00
+Summary: 0 passed, 1 failed, 0 skipped
+Total Duration: 25:00

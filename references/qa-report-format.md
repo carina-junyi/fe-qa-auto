@@ -11,7 +11,7 @@ URLs checked: <N>
 ================================================================================
 
 [1] <url>
-    Status   : ✓ PASS  |  ✗ FAIL  |  - SKIPPED (<reason>)
+    Status   : ✓ PASS  |  ✗ FAIL  |  ⚠ WARN  |  - SKIPPED (<reason>)
     Duration : <mm:ss>
     Questions: <total count>
 
@@ -30,6 +30,11 @@ URLs checked: <N>
         正確應為: <正確結果>
         建議修正: <如何調整>
 
+      若 WARN — API 備援紀錄：
+        困難描述: <browser 操作遇到什麼困難>
+        備援方式: <使用了 API 的什麼資料做 double check>
+        驗證結果: <透過 API 資料確認數學內容正確>
+
     Q2 ...
     Notes: <extra observations, or "none">
 
@@ -37,15 +42,17 @@ URLs checked: <N>
 [2] <url> ...
 
 ================================================================================
-Summary: <N> passed, <N> failed, <N> skipped
+Summary: <N> passed, <N> failed, <N> warned, <N> skipped
 Total Duration: <hh:mm:ss>
 ```
 
 ## 填寫規則
 
 - `✓ PASS`：所有題目無數學錯誤
-- `✗ FAIL`：任一題有錯誤，逐題描述
+- `✗ FAIL`：任一題有數學錯誤，逐題描述
+- `⚠ WARN`：數學內容正確（透過 API 備援確認），但 browser 操作有困難，頁面渲染未完整驗證。需標註困難描述與備援方式。
 - `- SKIPPED`：附原因（如 `requires login`、`非支援題型，請使用者手動 QA`）
 - 每題必須列出：重建題幹、自己的計算答案、平台答案
 - 正確題：說明**為何正確**的推理步驟
 - 錯誤題：指出**確切錯誤位置**並提供**具體修正建議**
+- WARN 題：標註 browser 遇到的困難、使用了 API 的什麼資料做 double check

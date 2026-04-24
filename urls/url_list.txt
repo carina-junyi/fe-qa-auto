@@ -21,3 +21,5 @@ https://www.junyiacademy.org/exercises/mcenter-g-10-7-2-20?topic=course-compare/
 https://www.junyiacademy.org/exercises/mcenter-g-10-7-2-21?topic=course-compare/math-high/math-10/j-m10a/j-m10a-c07/j-m10a-c07-lca Fail
 https://www.junyiacademy.org/exercises/mcenter-g-10-7-2-22?topic=course-compare/math-high/math-10/j-m10a/j-m10a-c07/j-m10a-c07-lca Pass
 https://www.junyiacademy.org/exercises/mcenter-g-10-7-2-23?topic=course-compare/math-high/math-10/j-m10a/j-m10a-c07/j-m10a-c07-lca Pass
+https://www.junyiacademy.org/exercises/mcenter-10-2-3-gsat-macom?topic=course-compare/math-high/math-10/j-m10a/j-m10a-c06/j-m10a-c06-lca Pass
+https://www.junyiacademy.org/exercises/mcenter-10-2-1-gsat-macom?topic=course-compare/math-high/math-10/j-m10a/j-m10a-c04/j-m10a-c04-lca Pass
