@@ -34,13 +34,15 @@ cat > /tmp/probe_page.js << 'JSEOF'
   var hasWorkarea = !!document.getElementById('workarea');
   var hasPerseusRenderer = !!document.querySelector('.perseus-renderer');
 
-  // 偵測題組類型
+  // 偵測題組類型與通過條件
   var exerciseMode = 'unknown';
   var exerciseId = null;
+  var passCondition = null;
   try {
     var E = window.Exercises;
     if (E) {
       exerciseMode = E.contentType || 'unknown';
+      passCondition = E.passCondition || null;
     }
   } catch(e){}
 
@@ -54,7 +56,8 @@ cat > /tmp/probe_page.js << 'JSEOF'
     hasWorkarea: hasWorkarea,
     hasPerseusRenderer: hasPerseusRenderer,
     exerciseMode: exerciseMode,
-    exerciseId: exerciseId
+    exerciseId: exerciseId,
+    passCondition: passCondition
   });
 })()
 JSEOF
@@ -143,6 +146,7 @@ API 回傳的資料**僅供以下用途**：
 頁面探測結果：
 - exerciseMode: exercise / sequential_quiz
 - exerciseId: <exercise ID>
+- passCondition: <累積型需答對幾題，僅 exercise 模式有值>
 - totalQuestions: <頁面上顯示的題目數>
 - totalInPool: <API 回傳的題目池總數>
 - answered: <已作答數>

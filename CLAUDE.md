@@ -80,20 +80,37 @@
 
 當 `/probe-page` 回傳 `exerciseMode: "exercise"` 時，需要特殊處理：
 
-1. **目標**：驗證題目池中的**所有題目**，而非只做到「答對 N 題」就停止。
+**目標**：驗證題目池中的**所有題目**，而非只做到「答對 N 題」就停止。
 
-2. **Hint-first 策略**：每題先點開 `#hint`（至少點一次），再填答提交。
-   平台會將該題標記為 `hintused`（不計入答對累積），確保不會因為累積答對而提早結束。
+#### Phase 1：Browser 驗證（前 passCondition - 1 題）
 
-3. **qid 覆蓋追蹤**：
-   - 從 `/probe-page` 的 API 偵察取得完整 qid 清單
-   - 每做完一題，記錄該題的 qid
-   - 若當前題目的 qid 已經驗證過 → 仍然用 hint-first 提交跳過，但不重複驗證 hints
-   - 持續做題直到所有 qid 都覆蓋過
+從 `/probe-page` 取得 `passCondition`（累積答對幾題即通過，可透過 `window.Exercises.passCondition` 取得）。
 
-4. **注意**：累積型為隨機出題，可能重複出到已驗證過的題目。
-   當剩餘未覆蓋的 qid 越來越少時，重複機率會提高。
-   若連續 10 題都是已驗證過的 qid，可合理判斷已覆蓋所有題目。
+正常用 browser 做題（Step 3-7 流程），但**只答對 passCondition - 1 題**。
+例如 `passCondition = 5` 時，答對 4 題後停止，避免觸發通過。
+
+- 每題記錄 qid，追蹤已覆蓋的題目
+- 第 passCondition 題使用 hint-first（先點 `#hint` 再提交），平台會視為未答對，不會累積
+
+#### Phase 2：API 驗證（剩餘未覆蓋的 qid）
+
+Phase 1 結束後，比對 API 偵察取得的完整 qid 清單，找出尚未覆蓋的 qid。
+對這些題目改用 API 資料驗證：
+
+1. **取得題目資料**：從 API 的 `get_question` 回傳中，找到對應 qid 的 `question` 和 `hints`
+2. **圖片處理**：若題目含圖片 widget，從 `backgroundImage.url`（S3 公開連結）下載圖片，視覺判讀內容
+3. **數學驗證**：根據題幹文字 + 圖片，獨立計算答案，逐步驗證 hints
+4. **輕量 browser 截圖**：開啟頁面截圖，確認題目渲染正常（公式、圖片、排版）
+   - 累積型會隨機出題，截到哪題就驗證哪題的渲染
+   - 不需要填答或提交
+
+> **注意**：Phase 2 中不可直接使用 API 的答案。答案必須由 agent 獨立計算。
+
+#### qid 覆蓋追蹤
+
+- 從 `/probe-page` 的 API 偵察取得完整 qid 清單
+- Phase 1 + Phase 2 結束後，確認所有 qid 都已驗證
+- 若有 qid 在 Phase 2 中使用了 API 資料做 double check，須在報告 Notes 中標註
 
 > 依序型（`sequential_quiz`）不需要此策略，直接按現有流程逐題做完即可。
 
