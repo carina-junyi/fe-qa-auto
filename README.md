@@ -29,15 +29,16 @@ Automated QA testing for Junyi Academy math exercises — validates question ste
 ## Workflow
 
 ```
-Step 0: Resolve URLs（展開資料夾 URL）
-Step 1: Open page
-Step 2: Probe page structure
-Step 3: Extract qid + stem, verify stem math
-Step 4: Identify all interactive elements
-Step 5: Dispatch QA skills → fill answers → submit → expand hints → verify math
-Step 6: Update url_list.txt (Pass/Fail)
-Step 7: Next question
-Step 8: Generate QA report
+Step 0:  Resolve URLs（展開資料夾 URL）
+Step 1:  Open page
+Step 2:  Probe page structure + detect exercise mode + API recon
+Step 2b: [exercise 模式] Hint-first strategy + qid coverage tracking
+Step 3:  Extract qid + stem, verify stem math
+Step 4:  Identify all interactive elements
+Step 5:  Dispatch QA skills → fill answers → submit → expand hints → verify math
+Step 6:  Update url_list.txt (Pass/Fail/Warn)
+Step 7:  Next question
+Step 8:  Generate QA report
 ```
 
 詳細流程見 [CLAUDE.md](CLAUDE.md)。
@@ -106,13 +107,27 @@ https://www.junyiacademy.org/exercises/mcenter-g-10-6-2-1?topic=... ToDo
 
 ### 3. 查看結果
 
-- `urls/url_list.txt` — 每個 URL 的狀態會更新為 `Pass` / `Fail` / `Skipped`
+- `urls/url_list.txt` — 每個 URL 的狀態會更新為 `Pass` / `Fail` / `Warn` / `Skipped`
 - `QA_result.txt` — 詳細的 QA 報告（含每題 qid、題幹、答案、hints 驗證結果）
 
-## Known Limitations
+## Exercise Modes
 
-### 隨機出題的題組無法測試所有題目
-平台的練習題組採用隨機出題機制，需要連續答對特定題數才算通過。通過後題組即結束，因此**無法遍歷題庫中的所有題目**，只會測到平台隨機抽到的題目。
+平台有兩種題組類型，透過 `window.Exercises.contentType` 自動偵測：
+
+| 類型 | `contentType` | 說明 | QA 策略 |
+|------|--------------|------|---------|
+| 依序型 | `sequential_quiz` | 固定 N 題，全部做完 | 逐題依序操作 |
+| 累積型 | `exercise` | 從題目池隨機出題，累積答對 N 題完成 | Hint-first 策略 + qid 覆蓋追蹤 |
+
+### API 偵察
+
+透過 `/api/v2/perseus/<exercise-id>/get_question` 取得完整題目池（含所有 qid），用於：
+1. 追蹤累積型題組的 qid 覆蓋進度
+2. Browser 操作遇到困難時做 double check（標記為 `Warn`）
+
+> API 的答案不可直接使用。答案必須由 agent 獨立計算。
+
+## Known Limitations
 
 ### 部分題型不支援自動化
 遇到不支援的題型（如互動式座標平面畫圖）時，該題會標記為 `SKIPPED`，並透過 reload 跳到下一題繼續 QA。若整個題組的所有題目都是不支援的題型，該 URL 會標記為 `Skipped`。
@@ -123,7 +138,7 @@ https://www.junyiacademy.org/exercises/mcenter-g-10-6-2-1?topic=... ToDo
 | 座標平面拖曳畫圖（Raphael/SVG） | 需要在 canvas 上拖曳點，無法透過鍵盤或 API 操作 |
 
 ### QA 報告產生規則
-- 有任何 URL 為 `Fail` → 自動產生 `QA_result.txt`
+- 有任何 URL 為 `Fail` 或 `Warn` → 自動產生 `QA_result.txt`
 - 全部 `Pass` → 不產生報告
 
 ## Key Features
