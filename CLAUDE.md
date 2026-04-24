@@ -34,6 +34,12 @@
   - 系統層級錯誤
 - **所有 URL 完成後**產生 `QA_result.txt`（格式見 `references/qa-report-format.md`）。
 - **嚴格模式（必須遵守）**：每一題都必須展開所有解題說明步驟（hints），逐步驗證每一步的數學正確性，不得跳過任何題目的 hints 驗證。
+- **依序型（sequential_quiz）必須全程 browser 驗證**：不得因為答錯、操作失敗或效率考量而跳過 browser 改用 API 驗證。API 僅供備援 double check（標 Warn），不可取代 browser 流程。
+- **答錯復原流程**：在依序型中答錯時，平台會重複出同一題且可能新增額外題目。處理方式：
+  1. 展開 hints 確認正確答案
+  2. 用 reload 跳到下一題（平台會載入下一個未答題目）
+  3. 若 reload 後仍停在同一題或回到已答題，用 dot navigation（點擊未作答的圓點）跳到下一個未答題
+  4. 繼續正常 browser 流程，不得放棄
 
 ## Reference Files
 
