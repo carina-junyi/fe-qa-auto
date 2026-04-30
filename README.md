@@ -106,7 +106,7 @@ Subagent（每個 URL）:
 
 ## Prerequisites
 
-- [agent-browser](https://github.com/anthropics/agent-browser) installed at `/opt/homebrew/bin/agent-browser`
+- [agent-browser](https://github.com/vercel-labs/agent-browser) installed at `/opt/homebrew/bin/agent-browser`
 - Claude Code CLI
 
 ## Usage
