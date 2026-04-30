@@ -1,0 +1,33 @@
+{
+  "url": "<完整 URL>",
+  "exerciseId": "<exercise ID，如 mcenter-10-2-1-gsat-macom>",
+  "exerciseMode": "sequential_quiz | exercise",
+  "status": "Pass | Fail | Warn",
+  "duration": "<mm:ss>",
+  "totalQuestions": "<實際驗證的題數>",
+  "coveredQids": "<已覆蓋的 qid 數>",
+  "totalInPool": "<API 回傳的題目池總數>",
+  "questions": [
+    {
+      "qid": "<題目識別碼>",
+      "type": "單選 | 多選 | 填充 | 下拉 | 拖曳排序",
+      "stem": "<重建的題幹文字，前 200 字>",
+      "myAnswer": "<agent 獨立計算的答案>",
+      "platformAnswer": "<平台接受的答案>",
+      "correct": true,
+      "hintsSteps": "<hints 總步數>",
+      "hintsValid": true,
+      "phase": "browser | api",
+      "errors": [
+        {
+          "location": "Stem | Options | Answer | Explain step N/M",
+          "content": "<具體錯誤描述>",
+          "correctValue": "<正確應為>",
+          "suggestion": "<建議修正方式>"
+        }
+      ],
+      "notes": "<降級紀錄、API 備援使用紀錄、或其他觀察，無則空字串>"
+    }
+  ],
+  "summary": "<N/M PASS, N FAIL 簡要描述>"
+}
