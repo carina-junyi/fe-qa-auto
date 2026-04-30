@@ -160,6 +160,14 @@ Hint 1/3: cosB = (5²+10²-17²)/(2×5×10) = (5+10-17)/100 = -2/100
       "correct": <true/false>,
       "hintsSteps": <步數>,
       "hintsValid": <true/false>,
+      "hintsVerification": [
+        {
+          "step": "1/N",
+          "hintContent": "<該步驟的數學表達式或關鍵計算>",
+          "myCalculation": "<自己重新計算的結果>",
+          "match": <true/false>
+        }
+      ],
       "phase": "<browser 或 api>",
       "errors": [],
       "notes": ""
@@ -167,6 +175,9 @@ Hint 1/3: cosB = (5²+10²-17²)/(2×5×10) = (5+10-17)/100 = -2/100
   ],
   "summary": "<簡要描述>"
 }
+
+**hintsVerification 欄位為必填**。每一步 hint 都必須有對應的驗算記錄。
+若某步 match=false，必須附加 "error" 欄位說明不一致原因。
 
 ## 狀態判定
 

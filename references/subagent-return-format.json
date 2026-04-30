@@ -17,6 +17,21 @@
       "correct": true,
       "hintsSteps": "<hints 總步數>",
       "hintsValid": true,
+      "hintsVerification": [
+        {
+          "step": "1/N",
+          "hintContent": "<該步驟 hint 的數學表達式或關鍵計算>",
+          "myCalculation": "<自己重新計算的結果>",
+          "match": true
+        },
+        {
+          "step": "2/N",
+          "hintContent": "<該步驟 hint 的數學表達式>",
+          "myCalculation": "<自己重新計算的結果>",
+          "match": false,
+          "error": "<不一致的具體描述>"
+        }
+      ],
       "phase": "browser | api",
       "errors": [
         {
