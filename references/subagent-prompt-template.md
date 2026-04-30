@@ -89,8 +89,12 @@
 
 **Phase 1：Browser 驗證（前 passCondition - 1 題）**
 
-正常做 passCondition - 1 題（與 Step 2A 相同流程）。
-第 passCondition 題使用 hint-first（先 click "#hint" 再填答提交）。
+1. 從 Step 1 的 probe 結果取得 `passCondition`（通常為 5）
+2. 用 browser 正常做題（與 Step 2A 相同流程），**答對 passCondition - 1 題**
+   - 例如 passCondition=5 時，必須用 browser 完整做完 4 題（擷取題幹→獨立計算→填答→提交→展開 hints→驗證）
+   - 每題記錄 qid，追蹤已覆蓋的題目
+3. 第 passCondition 題（第 5 題）使用 hint-first（先 click "#hint" 再填答提交），避免觸發通過
+4. Phase 1 結束時，應有 passCondition 個 qid 已覆蓋（含 hint-first 那題）
 
 **Phase 2：API 驗證（剩餘 qid）**
 
