@@ -1,0 +1,9 @@
+# 每行一個 URL，格式：<url> <status>
+# status 可省略（預設 ToDo）
+
+# 資料夾連結（自動展開為底下的所有題目）
+# https://www.junyiacademy.org/course-compare/math-elem/math-6/j-m6a/j-m6a-c08/jrc-6-01-2 ToDo
+
+# 單題連結（直接 QA）
+# https://www.junyiacademy.org/exercises/jnc-6-09-1-5a?topic=... ToDo
+# https://www.junyiacademy.org/exercises/jnc-6-05-1-2f?topic=... ToDo

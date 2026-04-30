@@ -1,8 +1,0 @@
-https://www.junyiacademy.org/exercises/e-m-5a-basic-1-1-2?redirect_count=1&topic=teacherpreneur%2Femath_syps%2Fnew-topic-226%2Fnew-topic-232 Fail
-https://www.junyiacademy.org/exercises/mcenter-10-2-1-gsat-macom?topic=course-compare/math-high/math-10/j-m10a/j-m10a-c04/j-m10a-c04-lca Pass
-https://www.junyiacademy.org/exercises/mcenter-10-2-2-gsat-macom?topic=course-compare/math-high/math-10/j-m10a/j-m10a-c05/j-m10a-c05-lca Fail
-https://www.junyiacademy.org/diagnostic-exam/cadd1d378fdf4b84a38ddf1b2902b747?qid=140429 Skipped
-https://www.junyiacademy.org/exercises/jrc-6-04-1-1b?qid=140620&redirect_count=1&topic=course-compare%2Fmath-elem%2Fmath-6%2Fj-m6a%2Fj-m6a-c14%2Fjrc-6-04-1a Pass
-https://www.junyiacademy.org/exercises/jrc-6-04-1-8b?redirect_count=1&topic=course-compare%2Fmath-elem%2Fmath-6%2Fj-m6a%2Fj-m6a-c14%2Fjrc-6-04-1e Pass
-https://www.junyiacademy.org/exercises/jrc-6-04-1-1a?qid=140429&redirect_count=1&topic=course-compare%2Fmath-elem%2Fmath-6%2Fj-m6a%2Fj-m6a-c14%2Fjrc-6-04-1a Pass
-
