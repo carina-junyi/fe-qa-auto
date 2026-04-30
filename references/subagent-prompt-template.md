@@ -60,20 +60,67 @@
 
 1. **擷取 qid**：eval "$(cat scripts/extract_qid.js)"
 2. **截圖**：screenshot → Read 讀取截圖，確認題幹、選項、圖片渲染
-3. **獨立計算**：根據題幹獨立計算正確答案
-4. **填答**：
-   - 單選/多選：截圖確認座標後 mouse click
-   - 填充（MathQuill）：eval "$(cat scripts/set_mq.js)('答案', index)"
-   - 填充（text-input）：snapshot 找 ref → fill @ref "value"
-   - 下拉選單：eval "$(cat scripts/set_select.js)(index, 'value')"
-5. **提交**：click "#check-answer-button" + wait 2000 + press Escape + wait 500
-6. **檢查結果**：eval "$(cat scripts/check_result.js)"
-7. **展開 hints**：重複 click "#hint" + wait 800（直到所有步驟展開）
-8. **擷取 hints**：eval "$(cat scripts/extract_hints.js)"
-9. **驗證 hints**：逐步驗證每一條 hint 的數學正確性
-10. **下一題**：find text "下一題" click + wait 2000
+3. **辨識題型**：eval "$(cat scripts/identify_qtype.js)"，取得 summary
+4. **獨立計算**：根據題幹獨立計算正確答案
+5. **填答**：根據 summary 中的元素類型分派操作（見下方分派規則）
+6. **提交**：click "#check-answer-button" + wait 2000 + press Escape + wait 500
+7. **檢查結果**：eval "$(cat scripts/check_result.js)"
+8. **展開 hints**：重複 click "#hint" + wait 800（直到所有步驟展開）
+9. **擷取 hints**：eval "$(cat scripts/extract_hints.js)"
+10. **驗證 hints**：逐步驗證每一條 hint 的數學正確性
+11. **下一題**：find text "下一題" click + wait 2000
 
-**答錯復原**（不可放棄 browser）：
+#### 分派規則
+
+根據 `identify_qtype.js` 回傳的 `summary`，依元素類型選擇操作方式：
+
+| summary 中的元素 | 操作方式 |
+|-----------------|---------|
+| `radio` 或 `checkbox` | 截圖確認座標後 mouse click |
+| `select` | eval "$(cat scripts/set_select.js)(index, 'value')" |
+| `mathquill` | eval "$(cat scripts/set_mq.js)('LATEX', index)" |
+| `text-input` | snapshot 找 ref → fill @ref "value" |
+| `drag-sort` | eval "$(cat scripts/focus_drag_item.js)(index)" + 鍵盤操作（Space→Arrow→Space） |
+| 全部為空 | 該題標記 SKIPPED，進入跳題機制 |
+
+#### 混合題型處理
+
+當同一題包含多種元素（如下拉 + 文字輸入）時：
+
+1. 先獨立解題，計算出**所有子題**的正確答案
+2. 依元素在頁面上的出現順序（由上到下），逐一填入答案
+   - 各元素只負責**填入/選擇答案**，**不要提交**
+3. 全部元素填完後，**統一執行一次提交**（click "#check-answer-button"）
+4. 處理彈窗 & 檢查結果
+5. 展開所有解題說明並驗證數學正確性
+
+> 提交答案只需按一次 `#check-answer-button`，平台會一次性檢查所有子題。
+
+#### 跳題機制（遇到不支援的題型時）
+
+遇到不支援的題型（如互動式座標平面畫圖等）時，**不跳過整個 URL**，而是：
+
+1. 該題標記為 `SKIPPED（非支援題型，請使用者手動 QA）`
+
+2. **策略 A（優先）：透過 hints 取得正確答案後提交**
+   - 重複點擊 `#hint` 直到所有步驟展開（N/N）
+   - 從最後一步 hint 擷取正確答案
+   - 用該答案提交
+   - 平台判定答對後自動出現「下一題」按鈕
+
+3. **策略 B（備用）：reload 跳題**
+   適用於連答案都無法透過鍵盤/滑鼠輸入的題型（如拖曳、畫圖）：
+   - 先點完所有 hints（確保 hint 資訊已載入）
+   - 擷取 hints 內容（供驗證數學正確性）
+   - reload 頁面，平台會自動跳到下一個未答題目
+
+4. 確認頁面已切換到下一題，繼續流程
+5. 在回傳 JSON 中該題 notes 標註 SKIPPED 及原因
+
+> 平台只有答對才會顯示「下一題」按鈕，答錯不會自動跳題。不要嘗試提交錯誤答案來跳題。
+
+#### 答錯復原（不可放棄 browser）
+
 1. 展開 hints 確認正確答案
 2. reload 跳到下一題
 3. 若 reload 無效，用 dot navigation（點擊未作答的圓點）
