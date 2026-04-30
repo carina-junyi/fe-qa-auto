@@ -24,44 +24,7 @@ description: Probe Page (頁面探測)
 用 eval 取得頁面骨架、題目數量與題組類型：
 
 ```bash
-cat > /tmp/probe_page.js << 'JSEOF'
-(function(){
-  var dots = document.querySelectorAll('.problem-history-icon');
-  var total = dots.length;
-  var answered = Array.from(dots).filter(function(d){
-    return d.src.indexOf('blank') === -1;
-  }).length;
-  var hasWorkarea = !!document.getElementById('workarea');
-  var hasPerseusRenderer = !!document.querySelector('.perseus-renderer');
-
-  // 偵測題組類型與通過條件
-  var exerciseMode = 'unknown';
-  var exerciseId = null;
-  var passCondition = null;
-  try {
-    var E = window.Exercises;
-    if (E) {
-      exerciseMode = E.contentType || 'unknown';
-      passCondition = E.passCondition || null;
-    }
-  } catch(e){}
-
-  // 從 URL 取出 exercise ID（供 API 偵察使用）
-  var match = location.pathname.match(/\/exercises\/([^/?]+)/);
-  if (match) exerciseId = match[1];
-
-  return JSON.stringify({
-    totalQuestions: total,
-    answered: answered,
-    hasWorkarea: hasWorkarea,
-    hasPerseusRenderer: hasPerseusRenderer,
-    exerciseMode: exerciseMode,
-    exerciseId: exerciseId,
-    passCondition: passCondition
-  });
-})()
-JSEOF
-/opt/homebrew/bin/agent-browser eval "$(cat /tmp/probe_page.js)"
+/opt/homebrew/bin/agent-browser eval "$(cat scripts/probe_page.js)"
 ```
 
 **題組類型說明：**
@@ -82,22 +45,7 @@ JSEOF
 
 2. 執行 DOM 探索尋找替代結構：
    ```bash
-   cat > /tmp/dom_explore.js << 'JSEOF'
-   (function(){
-     var ids = [];
-     document.querySelectorAll('[id]').forEach(function(el){
-       ids.push({id: el.id, tag: el.tagName, cls: (el.className||'').toString().substring(0,80)});
-     });
-     var perseusClasses = new Set();
-     document.querySelectorAll('[class]').forEach(function(el){
-       el.className.toString().split(' ').forEach(function(c){
-         if (c.match(/perseus|exercise|hint|question|answer|choice|widget/i)) perseusClasses.add(c);
-       });
-     });
-     return JSON.stringify({ids: ids, perseusClasses: Array.from(perseusClasses)});
-   })()
-   JSEOF
-   /opt/homebrew/bin/agent-browser eval "$(cat /tmp/dom_explore.js)"
+   /opt/homebrew/bin/agent-browser eval "$(cat scripts/dom_explore.js)"
    ```
 
 3. 更新 `page_structures/shared/exercise-layout.md`
@@ -107,30 +55,7 @@ JSEOF
 取得 exercise ID 後，呼叫 API 拿到完整題目池清單：
 
 ```bash
-cat > /tmp/api_recon.js << 'JSEOF'
-(function(){
-  var match = location.pathname.match(/\/exercises\/([^/?]+)/);
-  if (!match) return JSON.stringify({error: 'cannot extract exercise ID from URL'});
-  var exerciseId = match[1];
-  return new Promise(function(resolve){
-    fetch('/api/v2/perseus/' + exerciseId + '/get_question')
-      .then(function(r){ return r.json(); })
-      .then(function(resp){
-        var items = resp.data;
-        var summary = items.map(function(item, i){
-          return { index: i, qid: item.qid };
-        });
-        resolve(JSON.stringify({
-          exerciseId: exerciseId,
-          totalInPool: items.length,
-          qids: summary
-        }));
-      })
-      .catch(function(e){ resolve(JSON.stringify({error: e.message})); });
-  });
-})()
-JSEOF
-/opt/homebrew/bin/agent-browser eval "$(cat /tmp/api_recon.js)"
+/opt/homebrew/bin/agent-browser eval "$(cat scripts/api_recon.js)"
 ```
 
 API 回傳的資料**僅供以下用途**：

@@ -177,23 +177,7 @@ Phase 1 結束後，比對 API 偵察取得的完整 qid 清單，找出尚未�
 用 DOM eval 檢查提交結果：
 
 ```bash
-cat > /tmp/check_result.js << 'JSEOF'
-(function(){
-  var checkBtn = document.getElementById('check-answer-button');
-  var nextBtn = document.getElementById('next-question-button');
-  var feedback = document.getElementById('answer-feedback');
-  var dots = document.querySelectorAll('.problem-history-icon');
-  var answeredCount = Array.from(dots).filter(function(d){ return d.src.indexOf('blank') === -1; }).length;
-  return JSON.stringify({
-    isSubmitted: checkBtn && checkBtn.offsetParent === null,
-    hasNextButton: nextBtn && nextBtn.offsetParent !== null,
-    feedbackText: feedback ? feedback.textContent.trim() : '',
-    isCorrect: feedback && feedback.textContent.indexOf('答對') !== -1,
-    answeredCount: answeredCount
-  });
-})()
-JSEOF
-/opt/homebrew/bin/agent-browser eval "$(cat /tmp/check_result.js)"
+/opt/homebrew/bin/agent-browser eval "$(cat scripts/check_result.js)"
 ```
 
 #### 5b-4. 展開所有解題說明（必要步驟，不得跳過）
@@ -209,56 +193,7 @@ done
 用 DOM eval 擷取所有解題說明：
 
 ```bash
-cat > /tmp/extract_hints.js << 'JSEOF'
-(function(){
-  var ha = document.querySelector('.hints-area');
-  if (!ha) return JSON.stringify({error: 'no .hints-area'});
-  var children = ha.children;
-  var hints = [];
-  for (var i = 0; i < children.length; i++) {
-    var child = children[i];
-    var fc = child.firstElementChild;
-    var label = null;
-    if (fc) { var t = fc.textContent.trim(); if (t.match(/^\d+\/\d+$/)) label = t; }
-    function parseMathML(mathEl) {
-      if (!mathEl) return '';
-      var children = mathEl.children; var p = [];
-      for (var k = 0; k < children.length; k++) {
-        var el = children[k], tag = el.tagName.toLowerCase();
-        if (tag === 'mn' || tag === 'mi' || tag === 'mo') { p.push(el.textContent.trim()); }
-        else if (tag === 'mfrac') {
-          var num = el.children[0] ? (parseMathML(el.children[0]) || el.children[0].textContent.trim()) : '?';
-          var den = el.children[1] ? (parseMathML(el.children[1]) || el.children[1].textContent.trim()) : '?';
-          p.push('(' + num + '/' + den + ')');
-        } else if (tag === 'msup') {
-          var base = el.children[0] ? (parseMathML(el.children[0]) || el.children[0].textContent.trim()) : '?';
-          var exp = el.children[1] ? el.children[1].textContent.trim() : '?';
-          p.push(base + '^' + exp);
-        } else if (tag === 'mrow' || tag === 'mstyle') { p.push(parseMathML(el)); }
-        else { p.push(el.textContent.trim()); }
-      }
-      return p.join('');
-    }
-    function ex(node) {
-      var parts = [];
-      for (var j = 0; j < node.childNodes.length; j++) {
-        var cn = node.childNodes[j];
-        if (cn.nodeType === 3) { var t = cn.textContent.trim(); if (t) parts.push(t); }
-        else if (cn.nodeType === 1) {
-          if (cn.tagName === 'MJX-CONTAINER') {
-            var m = cn.querySelector('math');
-            if (m) parts.push('[math:' + parseMathML(m) + ']');
-          } else parts.push.apply(parts, ex(cn));
-        }
-      }
-      return parts;
-    }
-    if (label) hints.push({step: label, text: ex(child).join(' ')});
-  }
-  return JSON.stringify({totalSteps: hints.length, hints: hints});
-})()
-JSEOF
-/opt/homebrew/bin/agent-browser eval "$(cat /tmp/extract_hints.js)"
+/opt/homebrew/bin/agent-browser eval "$(cat scripts/extract_hints.js)"
 ```
 
 **如何確認已看完所有步驟：** 最後一步 (N/N) 通常包含「答案選 (X)」或「答案為 X」。
@@ -298,7 +233,7 @@ JSEOF
    done
 
    # 擷取 hints 內容（供 QA 報告驗證數學正確性）
-   /opt/homebrew/bin/agent-browser eval "$(cat /tmp/extract_hints.js)"
+   /opt/homebrew/bin/agent-browser eval "$(cat scripts/extract_hints.js)"
 
    # reload 頁面，平台會自動跳到下一個未答題目
    /opt/homebrew/bin/agent-browser reload
