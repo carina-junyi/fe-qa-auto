@@ -20,31 +20,7 @@ description: QA Drag-Sort Question (拖曳排序題 QA 流程)
 使用 DOM eval 取得所有 draggable 項目的當前順序與內容：
 
 ```bash
-cat > /tmp/extract_drag_items.js << 'JSEOF'
-(function(){
-  var container = document.querySelector('[data-rfd-droppable-id="droppable"]');
-  if (!container) return JSON.stringify({error: 'no droppable container'});
-
-  var items = container.querySelectorAll('[data-rfd-draggable-id]');
-  if (items.length === 0) return JSON.stringify({error: 'no draggable items', count: 0});
-
-  return JSON.stringify({
-    count: items.length,
-    items: Array.from(items).map(function(item, i){
-      var mathEl = item.querySelector('math');
-      var rect = item.getBoundingClientRect();
-      return {
-        position: i,
-        draggableId: item.getAttribute('data-rfd-draggable-id'),
-        text: mathEl ? mathEl.textContent.trim() : item.textContent.trim(),
-        x: Math.round(rect.x + rect.width / 2),
-        y: Math.round(rect.y + rect.height / 2)
-      };
-    })
-  });
-})()
-JSEOF
-/opt/homebrew/bin/agent-browser eval "$(cat /tmp/extract_drag_items.js)"
+/opt/homebrew/bin/agent-browser eval "$(cat scripts/extract_drag_items.js)"
 ```
 
 **降級：** 若 DOM eval 失敗：
@@ -74,18 +50,8 @@ JSEOF
 將一個項目從當前位置移動到目標位置：
 
 ```bash
-# 1. Focus 目標項目
-cat > /tmp/focus_drag_item.js << 'JSEOF'
-(function(){
-  // 取得當前順序中第 N 個位置的 draggable（N 為當前位置索引）
-  var items = document.querySelectorAll('[data-rfd-droppable-id="droppable"] [data-rfd-draggable-id]');
-  var target = items[CURRENT_POSITION_INDEX];
-  if (!target) return JSON.stringify({error: 'item not found'});
-  target.focus();
-  return JSON.stringify({focused: true, text: target.textContent.trim().substring(0, 50)});
-})()
-JSEOF
-/opt/homebrew/bin/agent-browser eval "$(cat /tmp/focus_drag_item.js)"
+# 1. Focus 目標項目（傳入當前位置索引）
+/opt/homebrew/bin/agent-browser eval "$(cat scripts/focus_drag_item.js)(CURRENT_POSITION_INDEX)"
 
 # 2. Space 拿起
 /opt/homebrew/bin/agent-browser press " "
@@ -122,7 +88,7 @@ JSEOF
 排序完成後，驗證最終順序是否正確：
 
 ```bash
-/opt/homebrew/bin/agent-browser eval "$(cat /tmp/extract_drag_items.js)"
+/opt/homebrew/bin/agent-browser eval "$(cat scripts/extract_drag_items.js)"
 ```
 
 比對回傳的 items 順序是否與計算的目標順序一致。若不一致，重新執行排序。

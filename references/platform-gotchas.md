@@ -14,7 +14,7 @@ QA 自動化過程中發現的平台特殊行為與解法。
 | 6 | 題組頁含多題，上方有進度圓點 | 逐題做完後點「下一題」 |
 | 7 | MathQuill 輸入框不能用 `fill` | 用 mouse 點擊 + `press` 逐字輸入 |
 | 8 | agent-browser 路徑 | 一律用 `/opt/homebrew/bin/agent-browser` |
-| 9 | `eval` 長 JS 會有 shell quoting 問題 | 寫入 `/tmp/*.js` 再用 `eval "$(cat /tmp/*.js)"` |
+| 9 | `eval` 長 JS 會有 shell quoting 問題 | 放在 `scripts/` 目錄下，用 `eval "$(cat scripts/*.js)"` |
 | 10 | 答錯不會跳題，只有答對才顯示「下一題」 | 用 hints 取得正確答案後提交；若無法輸入則用 JS 強制跳題 |
 
 ## 詳細說明
@@ -70,15 +70,15 @@ React-controlled，`fill` 會 timeout。必須 mouse click + `press` 逐字：
 
 ### 9. Shell Quoting for eval
 
-長 JS 寫入暫存檔，用 heredoc 避免 shell 衝突：
+長 JS 放在 `scripts/` 目錄下，用 file-based eval 避免 shell quoting 問題：
 ```bash
-cat > /tmp/my_script.js << 'JSEOF'
-(function(){ /* ... */ })()
-JSEOF
-/opt/homebrew/bin/agent-browser eval "$(cat /tmp/my_script.js)"
+/opt/homebrew/bin/agent-browser eval "$(cat scripts/my_script.js)"
 ```
 
-`'JSEOF'` 加單引號防止 shell interpolation。
+含參數的 JS 檔（如 `set_mq_latex.js`、`set_select.js`、`focus_drag_item.js`）以函數呼叫方式傳參：
+```bash
+/opt/homebrew/bin/agent-browser eval "$(cat scripts/set_mq_latex.js)('\\frac{3}{7}', 0)"
+```
 
 ### 10. 答錯不會自動跳題
 

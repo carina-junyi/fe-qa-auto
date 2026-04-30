@@ -37,21 +37,7 @@ description: Resolve URLs (展開資料夾連結)
 ### 2b. 擷取題目連結
 
 ```bash
-cat > /tmp/extract_exercise_links.js << 'JSEOF'
-(function(){
-  var links = document.querySelectorAll('a[href*="/exercises/"]');
-  var exercises = [];
-  links.forEach(function(a){
-    var href = a.href;
-    var text = a.textContent.trim().substring(0, 100);
-    if (exercises.findIndex(function(e){ return e.href === href; }) === -1) {
-      exercises.push({href: href, text: text});
-    }
-  });
-  return JSON.stringify({count: exercises.length, exercises: exercises});
-})()
-JSEOF
-/opt/homebrew/bin/agent-browser eval "$(cat /tmp/extract_exercise_links.js)"
+/opt/homebrew/bin/agent-browser eval "$(cat scripts/extract_exercise_links.js)"
 ```
 
 ### 2c. 處理失敗

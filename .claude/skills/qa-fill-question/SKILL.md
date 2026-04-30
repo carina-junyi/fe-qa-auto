@@ -25,54 +25,7 @@ description: QA Fill-in Question (填充題 QA 流程)
 使用 DOM eval 取得所有輸入框的位置與目前值：
 
 ```bash
-cat > /tmp/extract_inputs.js << 'JSEOF'
-(function(){
-  var workarea = document.getElementById('workarea');
-  if (!workarea) return JSON.stringify({error: 'no workarea'});
-
-  var result = {mathquills: [], textInputs: [], totalCount: 0};
-
-  // 1) MathQuill 輸入框
-  var mqFields = workarea.querySelectorAll('.mq-editable-field.mq-math-mode');
-  result.mathquills = Array.from(mqFields).map(function(f, i) {
-    var block = f.querySelector('.mq-root-block');
-    var rect = f.getBoundingClientRect();
-    return {
-      idx: i,
-      inputType: 'mathquill',
-      value: block ? block.textContent.trim() : '',
-      isEmpty: block ? block.classList.contains('mq-empty') : true,
-      blockId: block ? block.getAttribute('mathquill-block-id') : null,
-      x: Math.round(rect.x + rect.width / 2),
-      y: Math.round(rect.y + rect.height / 2),
-      width: Math.round(rect.width),
-      height: Math.round(rect.height)
-    };
-  });
-
-  // 2) 普通 text input (perseus-input-number-widget)
-  var textInputs = workarea.querySelectorAll('input[type="text"]');
-  result.textInputs = Array.from(textInputs).map(function(inp, i) {
-    var rect = inp.getBoundingClientRect();
-    var para = inp.closest('[data-perseus-paragraph-index]') || inp.closest('.paragraph') || inp.parentElement;
-    return {
-      idx: i,
-      inputType: 'text-input',
-      value: inp.value,
-      testId: inp.getAttribute('data-testid') || '',
-      context: para ? para.textContent.trim().substring(0, 200) : '',
-      x: Math.round(rect.x + rect.width / 2),
-      y: Math.round(rect.y + rect.height / 2),
-      width: Math.round(rect.width),
-      height: Math.round(rect.height)
-    };
-  });
-
-  result.totalCount = result.mathquills.length + result.textInputs.length;
-  return JSON.stringify(result);
-})()
-JSEOF
-/opt/homebrew/bin/agent-browser eval "$(cat /tmp/extract_inputs.js)"
+/opt/homebrew/bin/agent-browser eval "$(cat scripts/extract_inputs.js)"
 ```
 
 **降級：** 若 DOM eval 失敗（totalCount 為 0 或指令報錯）：
@@ -114,21 +67,8 @@ JSEOF
 透過 MathQuill 的 LaTeX API 可以設定任意數學表達式，包括帶分數：
 
 ```bash
-cat > /tmp/set_mq_latex.js << 'JSEOF'
-(function(latexStr, mqIndex){
-  var mqs = document.querySelectorAll('.mq-editable-field.mq-math-mode');
-  var mq = mqs[mqIndex || 0];
-  if (!mq) return JSON.stringify({error: 'no MathQuill field at index ' + mqIndex});
-  try {
-    var MQ = MathQuill.getInterface(2);
-    var field = MQ.MathField(mq);
-    field.latex(latexStr);
-    mq.dispatchEvent(new Event('input', {bubbles: true}));
-    return JSON.stringify({success: true, latex: field.latex()});
-  } catch(e){ return JSON.stringify({error: e.message}); }
-})("<LATEX>", 0)
-JSEOF
-/opt/homebrew/bin/agent-browser eval "$(cat /tmp/set_mq_latex.js)"
+# 傳入 LaTeX 字串和 MathQuill 欄位索引（從 0 開始）
+/opt/homebrew/bin/agent-browser eval "$(cat scripts/set_mq_latex.js)('<LATEX>', 0)"
 ```
 
 **常用 LaTeX 格式：**

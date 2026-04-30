@@ -20,34 +20,7 @@ description: QA Dropdown Question (下拉選單題 QA 流程)
 使用 DOM eval 取得所有 `<select>` 元素的選項與位置：
 
 ```bash
-cat > /tmp/extract_dropdown.js << 'JSEOF'
-(function(){
-  var workarea = document.getElementById('workarea');
-  if (!workarea) return JSON.stringify({error: 'no workarea'});
-
-  var selects = workarea.querySelectorAll('select');
-  if (selects.length === 0) return JSON.stringify({error: 'no select elements', count: 0});
-
-  return JSON.stringify({
-    count: selects.length,
-    selects: Array.from(selects).map(function(s, i){
-      var rect = s.getBoundingClientRect();
-      var opts = Array.from(s.options).map(function(o){
-        return {value: o.value, text: o.textContent.trim(), disabled: o.disabled};
-      });
-      var para = s.closest('[data-perseus-paragraph-index]') || s.closest('.paragraph') || s.parentElement;
-      return {
-        idx: i,
-        options: opts,
-        currentValue: s.value,
-        context: para ? para.textContent.trim().substring(0, 200) : '',
-        center: {x: Math.round(rect.x + rect.width/2), y: Math.round(rect.y + rect.height/2)}
-      };
-    })
-  });
-})()
-JSEOF
-/opt/homebrew/bin/agent-browser eval "$(cat /tmp/extract_dropdown.js)"
+/opt/homebrew/bin/agent-browser eval "$(cat scripts/extract_dropdown.js)"
 ```
 
 **降級：** 若 DOM eval 失敗：
@@ -72,18 +45,8 @@ JSEOF
 # 方法 1：用 snapshot ref
 /opt/homebrew/bin/agent-browser select @eN "<value>"
 
-# 方法 2：用 JS 指定特定 select（多個 select 時）
-cat > /tmp/set_select.js << 'JSEOF'
-(function(){
-  var selects = document.querySelectorAll('#workarea select');
-  if (selects[0]) {
-    selects[0].value = '<value>';
-    selects[0].dispatchEvent(new Event('change', {bubbles: true}));
-  }
-  return 'done';
-})()
-JSEOF
-/opt/homebrew/bin/agent-browser eval "$(cat /tmp/set_select.js)"
+# 方法 2：用 JS 指定特定 select（傳入 index 和 value）
+/opt/homebrew/bin/agent-browser eval "$(cat scripts/set_select.js)(0, '<value>')"
 ```
 
 **重要：** `<value>` 是 option 的 `value` 屬性（如 `"1"`, `"2"`），不是顯示文字（如 `"向上"`, `"向下"`）。第一個選項（value `"0"`）通常是 disabled 的 placeholder。
@@ -93,17 +56,9 @@ JSEOF
 依序對每個 `<select>` 設定值，用 JS 中的 index 區分：
 
 ```bash
-cat > /tmp/set_selects.js << 'JSEOF'
-(function(){
-  var selects = document.querySelectorAll('#workarea select');
-  // selects[0].value = '<value_for_first>';
-  // selects[0].dispatchEvent(new Event('change', {bubbles: true}));
-  // selects[1].value = '<value_for_second>';
-  // selects[1].dispatchEvent(new Event('change', {bubbles: true}));
-  return 'done';
-})()
-JSEOF
-/opt/homebrew/bin/agent-browser eval "$(cat /tmp/set_selects.js)"
+# 依序對每個 select 設定值，用不同 index：
+/opt/homebrew/bin/agent-browser eval "$(cat scripts/set_select.js)(0, '<value_for_first>')"
+/opt/homebrew/bin/agent-browser eval "$(cat scripts/set_select.js)(1, '<value_for_second>')"
 ```
 
 ---

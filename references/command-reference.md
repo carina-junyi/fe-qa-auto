@@ -41,6 +41,6 @@
 | Action | Command |
 |--------|---------|
 | Inline eval | `agent-browser eval "(function(){ return 'ok'; })()"` |
-| File-based eval | `agent-browser eval "$(cat /tmp/script.js)"` |
+| File-based eval | `agent-browser eval "$(cat scripts/script.js)"` |
 
-**建議：** 長 JS 一律寫入 `/tmp/*.js` 再用 file-based eval，避免 shell quoting 問題。
+**建議：** 長 JS 一律放在 `scripts/` 目錄下，用 file-based eval 引用，避免 shell quoting 問題。
