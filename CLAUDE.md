@@ -70,10 +70,8 @@ for i, url in enumerate(todo_urls):
 
 #### 執行模式
 
-- **序列模式**（預設）：一個 subagent 完成後再 spawn 下一個
-- **並行模式**：多個 subagent 同時執行（各用不同 session），用 `run_in_background: true`
-
-> 建議先用序列模式確認穩定後再開並行。
+- **並行模式**（預設）：所有 subagent 同時執行（各用不同 session），用 `run_in_background: true`
+- **序列模式**：一個 subagent 完成後再 spawn 下一個（除錯時使用）
 
 ### Step 3: 收集結果
 
