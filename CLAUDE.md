@@ -80,8 +80,14 @@ for i, url in enumerate(todo_urls):
 主 Agent 負責：
 
 1. **解析 JSON**：從 subagent 回傳中提取 status、questions、errors
-2. **更新 url_list.txt**：根據 `status` 欄位更新對應 URL 的狀態（Pass/Fail/Warn）
-3. **記錄結果**：暫存每個 URL 的 JSON 結果，供 Step 4 組裝報告
+2. **驗證嚴謹度**：檢查每題的 `hintsVerification` 欄位，確認 subagent 有逐步驗算：
+   - 每題都必須有 `hintsVerification` 陣列，若缺少則視為驗證不完整
+   - 陣列長度必須等於 `hintsSteps`（每一步都有驗算記錄）
+   - 每筆記錄都必須有 `myCalculation`（有自己重算）
+   - `match: false` 的必須附 `error` 欄位
+   - 若 subagent 未提供完整的 `hintsVerification`，主 agent 應標註該 URL 為驗證不完整，要求重新執行
+3. **更新 url_list.txt**：根據 `status` 欄位更新對應 URL 的狀態（Pass/Fail/Warn）
+4. **記錄結果**：暫存每個 URL 的 JSON 結果，供 Step 4 組裝報告
 
 ### Step 4: Generate QA Report
 
