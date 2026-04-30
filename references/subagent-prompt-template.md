@@ -94,12 +94,16 @@
 
 **Phase 2：API 驗證（剩餘 qid）**
 
-1. 從 API 取得所有題目資料（題幹、答案、hints、圖片 URL）
-2. 比對 Phase 1 已覆蓋的 qid，對未覆蓋的逐題：
-   - 若有圖片：下載 S3 圖片（curl），用 Read 讀取判讀
+> **重要**：API 呼叫必須透過 browser eval（`agent-browser eval`）執行，不可用 curl 或其他方式直接打 API。
+> 平台 API 會驗證 origin 和 cookie，只有透過已開啟頁面的 browser session 才能成功。
+
+1. 透過 browser eval 取得所有題目資料：`eval "$(cat scripts/api_recon.js)"`（Step 1 已執行過，可直接使用結果）
+2. 若需取得完整題目內容（題幹、hints），用 browser eval 呼叫 fetch API
+3. 比對 Phase 1 已覆蓋的 qid，對未覆蓋的逐題：
+   - 若有圖片：下載 S3 圖片（curl 可用，S3 不需認證），用 Read 讀取判讀
    - 獨立計算答案（不可使用 API 的答案）
    - 驗證 hints 數學正確性
-3. 在回傳結果中標註 phase: "api"
+4. 在回傳結果中標註 phase: "api"
 
 ## 驗證規則
 
