@@ -1,10 +1,24 @@
 # fe-qa-auto
 
-Automated QA testing for Junyi Academy math exercises — validates question stems, answers, and hint explanations via browser automation.
+Automated QA testing for Junyi Academy math exercises — validates question stems, answers, and hint explanations via browser automation with parallel subagent execution.
 
 ## Overview
 
 對均一教育平台的數學練習頁面進行自動化 QA 驗證，檢查題幹、選項、答案與解題說明（hints）是否有數學錯誤。
+
+## Architecture
+
+```
+主 Agent（協調者）
+│
+├─ 讀取 url_list.txt
+├─ 對每個 URL 並行 spawn Subagent（各用獨立 browser session）
+├─ 收集 JSON 結果 + 驗證嚴謹度（hintsVerification）
+├─ 更新 url_list.txt
+└─ 產生 QA_result.txt
+```
+
+每個 Subagent 獨立執行完整 QA 流程，使用 `agent-browser --session` 避免 browser 衝突。
 
 ## Supported Question Types
 
@@ -29,16 +43,18 @@ Automated QA testing for Junyi Academy math exercises — validates question ste
 ## Workflow
 
 ```
-Step 0:  Resolve URLs（展開資料夾 URL）
-Step 1:  Open page
-Step 2:  Probe page structure + detect exercise mode + API recon
-Step 2b: [exercise 模式] Hint-first strategy + qid coverage tracking
-Step 3:  Extract qid + stem, verify stem math
-Step 4:  Identify all interactive elements
-Step 5:  Dispatch QA skills → fill answers → submit → expand hints → verify math
-Step 6:  Update url_list.txt (Pass/Fail/Warn)
-Step 7:  Next question
-Step 8:  Generate QA report
+主 Agent:
+  Step 0:  Resolve URLs（展開資料夾 URL）
+  Step 1:  讀取待處理 URL
+  Step 2:  並行 spawn Subagent（每個 URL 一個）
+  Step 3:  收集結果 + 驗證嚴謹度
+  Step 4:  產生 QA report
+
+Subagent（每個 URL）:
+  1. 開啟頁面 + 偵測類型（sequential_quiz / exercise）
+  2A. 依序型：全程 browser 逐題驗證
+  2B. 累積型：Phase 1 browser（passCondition-1 題）+ Phase 2 API 驗證剩餘 qid
+  3. 回傳結構化 JSON（含 hintsVerification）
 ```
 
 詳細流程見 [CLAUDE.md](CLAUDE.md)。
@@ -47,68 +63,74 @@ Step 8:  Generate QA report
 
 ```
 .
-├── CLAUDE.md                    # Main workflow instructions
-├── QA_result.txt                # QA report output (generated per run)
+├── CLAUDE.md                    # 主 Agent 工作流程
+├── QA_result.txt                # QA 報告（自動產生）
 ├── urls/
-│   └── url_list.txt             # URLs to QA (with status)
+│   └── url_list.txt             # 待 QA 的 URL 清單
+├── scripts/                     # JS 工具檔（17 個，直接 cat 使用）
+│   ├── probe_page.js                # 偵測頁面結構與題組類型
+│   ├── api_recon.js                 # API 取得題目池清單
+│   ├── extract_qid.js               # 取得題目 qid
+│   ├── extract_stem.js              # 擷取題幹
+│   ├── identify_qtype.js            # 辨識題型
+│   ├── extract_hints.js             # 擷取解題說明
+│   ├── check_result.js              # 檢查提交結果
+│   ├── extract_choices.js           # 擷取選項
+│   ├── extract_inputs.js            # 擷取輸入框
+│   ├── extract_dropdown.js          # 擷取下拉選單
+│   ├── extract_drag_items.js        # 擷取拖曳項目
+│   ├── set_mq.js                    # MathQuill 填值（參數式）
+│   ├── set_mq_latex.js              # MathQuill 填值（替代版）
+│   ├── set_select.js                # 下拉選單選值（參數式）
+│   ├── focus_drag_item.js           # 聚焦拖曳項目（參數式）
+│   └── dom_explore.js               # DOM 結構探索
 ├── .claude/
-│   └── skills/                  # Skill definitions (SKILL.md format)
-│       ├── resolve-urls/            # Step 0: expand folder URLs
-│       ├── probe-page/             # Step 2: page structure detection
-│       ├── extract-and-verify-stem/ # Step 3: qid + stem extraction
-│       ├── identify-question-type/  # Step 4: element detection
-│       ├── qa-choice-question/      # Step 5: radio/checkbox
-│       ├── qa-fill-question/        # Step 5: MathQuill/text input
-│       ├── qa-dropdown-question/    # Step 5: <select>
-│       ├── qa-drag-question/        # Step 5: drag-sort
-│       └── generate-qa-report/      # Step 8: QA report
-├── page_structures/             # DOM selectors & JS extraction
-│   ├── shared/                      # Common elements
-│   ├── choice/                      # Radio/checkbox options
-│   ├── dropdown/                    # Select dropdowns
-│   ├── fill-in/                     # MathQuill & text inputs
-│   └── drag-sort/                   # Drag-and-drop sortable
-└── references/
-    ├── platform-gotchas.md      # Known platform quirks
-    ├── command-reference.md     # agent-browser CLI reference
-    └── qa-report-format.md      # Report template
+│   └── skills/                  # Skill 定義（Subagent 需要時讀取）
+│       ├── resolve-urls/
+│       ├── probe-page/
+│       ├── extract-and-verify-stem/
+│       ├── identify-question-type/
+│       ├── qa-choice-question/
+│       ├── qa-fill-question/
+│       ├── qa-dropdown-question/
+│       ├── qa-drag-question/
+│       └── generate-qa-report/
+├── references/
+│   ├── subagent-prompt-template.md  # Subagent prompt 模板
+│   ├── subagent-return-format.json  # Subagent 回傳 JSON 格式
+│   ├── qa-report-format.md          # QA 報告格式
+│   ├── platform-gotchas.md          # 平台特殊行為
+│   └── command-reference.md         # agent-browser 指令速查
+└── page_structures/             # DOM 結構、CSS selectors
 ```
 
 ## Prerequisites
 
-- [agent-browser](https://github.com/anthropics/agent-browser) installed at `/opt/homebrew/bin/agent-browser`
+- [agent-browser](https://github.com/vercel-labs/agent-browser) installed at `/opt/homebrew/bin/agent-browser`
 - Claude Code CLI
 
 ## Usage
 
 ### 1. 準備 URL 清單
 
-在 `urls/url_list.txt` 中貼上要 QA 的 URL（每行一個），支援兩種格式：
+在 `urls/url_list.txt` 中貼上要 QA 的 URL（每行一個）：
 
 ```
-# 資料夾連結（自動展開為底下的所有題目）
-https://www.junyiacademy.org/course-compare/math-elem/math-6/j-m6a/j-m6a-c08/jrc-6-01-2 ToDo
-
-# 單題連結（直接 QA）
-https://www.junyiacademy.org/exercises/mcenter-g-10-6-2-1?topic=... ToDo
+https://www.junyiacademy.org/exercises/jnc-6-09-1-5a?topic=... ToDo
+https://www.junyiacademy.org/exercises/jnc-6-05-1-2f?topic=... ToDo
 ```
-
-> **注意**：若該資料夾的題組為**隱藏題組**（頁面無法公開存取），則不支援資料夾連結的形式。
-> 此時需要將每一組題目的 URL 逐一貼上，例如：
-> ```
-> https://www.junyiacademy.org/exercises/mcenter-g-10-7-2-11?topic=... ToDo
-> https://www.junyiacademy.org/exercises/mcenter-g-10-7-2-12?topic=... ToDo
-> https://www.junyiacademy.org/exercises/mcenter-g-10-7-2-13?topic=... ToDo
-> ```
 
 ### 2. 執行 QA
 
-在此目錄下啟動 Claude Code，Claude 會依照 [CLAUDE.md](CLAUDE.md) 自動執行完整 QA 流程。
+在此目錄下啟動 Claude Code，Claude 會依照 [CLAUDE.md](CLAUDE.md) 自動：
+- 並行 spawn subagent 處理每個 URL
+- 收集結果並驗證嚴謹度
+- 更新 url_list.txt 狀態
 
 ### 3. 查看結果
 
-- `urls/url_list.txt` — 每個 URL 的狀態會更新為 `Pass` / `Fail` / `Warn` / `Skipped`
-- `QA_result.txt` — 詳細的 QA 報告（含每題 qid、題幹、答案、hints 驗證結果）
+- `urls/url_list.txt` — 每個 URL 的狀態：`Pass` / `Fail` / `Warn` / `Skipped`
+- `QA_result.txt` — 詳細報告（有 Fail 或 Warn 時產生）
 
 ## Exercise Modes
 
@@ -116,48 +138,51 @@ https://www.junyiacademy.org/exercises/mcenter-g-10-6-2-1?topic=... ToDo
 
 | 類型 | `contentType` | 說明 | QA 策略 |
 |------|--------------|------|---------|
-| 依序型 | `sequential_quiz` | 固定 N 題，全部做完 | 逐題依序操作 |
-| 累積型 | `exercise` | 從題目池隨機出題，累積答對 N 題完成 | Hint-first 策略 + qid 覆蓋追蹤 |
+| 依序型 | `sequential_quiz` | 固定 N 題，全部做完 | 全程 browser 逐題驗證 |
+| 累積型 | `exercise` | 從題目池隨機出題 | Phase 1: browser 做 passCondition-1 題 → Phase 2: API 驗證剩餘 qid |
 
 ### API 偵察
 
-透過 `/api/v2/perseus/<exercise-id>/get_question` 取得完整題目池（含所有 qid），用於：
-1. 追蹤累積型題組的 qid 覆蓋進度
-2. Browser 操作遇到困難時做 double check（標記為 `Warn`）
+透過 `/api/v2/perseus/<exercise-id>/get_question` 取得完整題目池（含所有 qid）。
 
-> API 的答案不可直接使用。答案必須由 agent 獨立計算。
+> API 呼叫必須透過 browser eval 執行（需要 session cookie），不可用 curl。
+> API 的答案不可直接使用提交，答案必須由 agent 獨立計算。
+
+## Verification
+
+每題透過**三方一致性**驗證：
+
+1. **Independent calculation** — agent 獨立計算答案
+2. **Platform answer** — 提交後確認平台接受
+3. **Hint verification** — 展開每步 hint，逐步重新計算驗證
+
+### 嚴格驗證（hintsVerification）
+
+Subagent 回傳的 JSON 中，每題必須包含 `hintsVerification` 陣列，記錄每步 hint 的驗算過程：
+
+```json
+{
+  "hintsVerification": [
+    {
+      "step": "1/3",
+      "hintContent": "125-100=25",
+      "myCalculation": "125-100=25",
+      "match": true
+    }
+  ]
+}
+```
+
+主 Agent 會檢查此欄位確認 subagent 有逐步驗算，而非只看最終答案。
 
 ## Known Limitations
 
 ### 部分題型不支援自動化
-遇到不支援的題型（如互動式座標平面畫圖）時，該題會標記為 `SKIPPED`，並透過 reload 跳到下一題繼續 QA。若整個題組的所有題目都是不支援的題型，該 URL 會標記為 `Skipped`。
-
-目前不支援的題型：
 | 題型 | 原因 |
 |------|------|
 | 座標平面拖曳畫圖（Raphael/SVG） | 需要在 canvas 上拖曳點，無法透過鍵盤或 API 操作 |
+| diagnostic-exam 類型 | 非 exercises 頁面，不適用目前 QA 流程 |
 
 ### QA 報告產生規則
 - 有任何 URL 為 `Fail` 或 `Warn` → 自動產生 `QA_result.txt`
 - 全部 `Pass` → 不產生報告
-
-## Key Features
-
-### MathQuill LaTeX API
-使用 `MathQuill.getInterface(2).MathField(el).latex()` 直接設定數學表達式，支援帶分數（如 `5\frac{3}{8}`）等所有格式。
-
-### MathML Structure Parser
-使用 `parseMathML()` 遍歷 MathML DOM 節點（`<mfrac>`, `<msup>` 等），正確解析分數避免 `textContent` 的分子分母合併問題。
-
-### qid Tracking
-每題透過 `Exercises.PerseusBridge.getSeedInfo().problem_type` 擷取 qid，記錄在 QA 報告中供追蹤。
-
-## Verification
-
-Each question is validated with **three-way consistency**:
-
-1. **Independent calculation** — solve the math independently
-2. **Platform answer** — submit and check if accepted
-3. **Hint verification** — expand all hint steps, verify each step's math, compare final answer
-
-Any inconsistency is flagged as a potential error in QA_result.txt.
