@@ -109,16 +109,46 @@ for i, url in enumerate(todo_urls):
 
 檢查是否有任何 URL 的狀態為 `Fail` 或 `Warn`。**若有，產生 `QA_result.txt`**：
 
-根據 `references/qa-report-format.md` 的格式，將所有 subagent 回傳的 JSON 組裝成報告：
-
-- `status` → PASS / FAIL / WARN
-- `questions[].stem` → Stem 欄位
-- `questions[].myAnswer` → Answer 欄位
-- `questions[].platformAnswer` → Platform 欄位
-- `questions[].errors[]` → 錯誤描述區塊
-- `questions[].notes` → Notes 欄位
+根據 `references/qa-report-format.md` 的格式，將所有 subagent 回傳的 JSON 組裝成報告。
 
 若全部 Pass（無 Fail 也無 Warn），則不需要產生報告。
+
+#### 組裝規則（JSON → QA_result.txt 欄位對應）
+
+```
+Header:
+  Generated    ← 當前日期時間
+  URLs checked ← subagent 回傳 JSON 的數量
+
+Per URL:
+  Status       ← json.status（Pass→✓ PASS, Fail→✗ FAIL, Warn→⚠ WARN）
+  Duration     ← json.duration
+  Questions    ← json.coveredQids / json.totalInPool
+
+Per Question（僅 Fail 或 Warn 的 URL 需要逐題列出）:
+  type         ← json.questions[].type
+  qid          ← json.questions[].qid
+  Result       ← json.questions[].hintsValid（true→✓ 正確, false→✗ 錯誤）
+  Stem         ← json.questions[].stem
+  Answer       ← json.questions[].myAnswer
+  Platform     ← json.questions[].platformAnswer
+
+  若 hintsValid=true:
+    判斷原因   ← 從 json.questions[].hintsVerification 中摘要每步驗算結果
+
+  若 hintsValid=false:
+    錯誤位置   ← json.questions[].errors[].location
+    錯誤內容   ← json.questions[].errors[].content
+    正確應為   ← json.questions[].errors[].correctValue
+    建議修正   ← json.questions[].errors[].suggestion
+
+  Notes        ← json.questions[].notes（空字串則寫 "none"）
+
+Footer:
+  Summary      ← 統計 passed / failed / warned / skipped 數量
+```
+
+**Pass 的 URL 只需列出 Status 和 Questions 數量，不需逐題展開。**
 
 ---
 
