@@ -75,9 +75,9 @@ React-controlled，`fill` 會 timeout。必須 mouse click + `press` 逐字：
 /opt/homebrew/bin/agent-browser eval "$(cat scripts/my_script.js)"
 ```
 
-含參數的 JS 檔（如 `set_mq_latex.js`、`set_select.js`、`focus_drag_item.js`）以函數呼叫方式傳參：
+含參數的 JS 檔（如 `set_mq.js`、`set_select.js`、`focus_drag_item.js`）以函數呼叫方式傳參：
 ```bash
-/opt/homebrew/bin/agent-browser eval "$(cat scripts/set_mq_latex.js)('\\frac{3}{7}', 0)"
+/opt/homebrew/bin/agent-browser eval "$(cat scripts/set_mq.js)('\\frac{3}{7}', 0)"
 ```
 
 ### 10. 答錯不會自動跳題

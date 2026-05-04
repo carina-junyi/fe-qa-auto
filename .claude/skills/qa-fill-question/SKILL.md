@@ -68,7 +68,7 @@ description: QA Fill-in Question (填充題 QA 流程)
 
 ```bash
 # 傳入 LaTeX 字串和 MathQuill 欄位索引（從 0 開始）
-/opt/homebrew/bin/agent-browser eval "$(cat scripts/set_mq_latex.js)('<LATEX>', 0)"
+/opt/homebrew/bin/agent-browser eval "$(cat scripts/set_mq.js)('<LATEX>', 0)"
 ```
 
 **常用 LaTeX 格式：**

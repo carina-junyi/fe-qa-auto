@@ -33,7 +33,6 @@
   - `extract_dropdown.js` — 擷取下拉選單
   - `extract_drag_items.js` — 擷取拖曳排序項目
   - `set_mq.js` — MathQuill 填值：eval "$(cat scripts/set_mq.js)('LATEX', INDEX)"
-  - `set_mq_latex.js` — MathQuill 填值（替代版）：eval "$(cat scripts/set_mq_latex.js)('LATEX', INDEX)"
   - `set_select.js` — 下拉選單選值：eval "$(cat scripts/set_select.js)(INDEX, 'VALUE')"
   - `focus_drag_item.js` — 聚焦拖曳項目：eval "$(cat scripts/focus_drag_item.js)(INDEX)"
 
