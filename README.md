@@ -68,7 +68,7 @@ Subagent（每個 URL）:
 ├── QA_result.txt                # QA 報告（自動產生）
 ├── urls/
 │   └── url_list.txt             # 待 QA 的 URL 清單
-├── scripts/                     # JS 工具檔（17 個，直接 cat 使用）
+├── scripts/                     # JS 工具檔（16 個，直接 cat 使用）
 │   ├── probe_page.js                # 偵測頁面結構與題組類型
 │   ├── api_recon.js                 # API 取得題目池清單
 │   ├── extract_qid.js               # 取得題目 qid
@@ -80,6 +80,7 @@ Subagent（每個 URL）:
 │   ├── extract_inputs.js            # 擷取輸入框
 │   ├── extract_dropdown.js          # 擷取下拉選單
 │   ├── extract_drag_items.js        # 擷取拖曳項目
+│   ├── extract_exercise_links.js    # 擷取資料夾中的題目連結
 │   ├── set_mq.js                    # MathQuill 填值（參數式，含錯誤處理）
 │   ├── set_select.js                # 下拉選單選值（參數式）
 │   ├── focus_drag_item.js           # 聚焦拖曳項目（參數式）
