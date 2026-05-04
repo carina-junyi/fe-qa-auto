@@ -7,6 +7,8 @@
   "totalQuestions": "<實際驗證的題數>",
   "coveredQids": "<已覆蓋的 qid 數>",
   "totalInPool": "<API 回傳的題目池總數>",
+  "browserCount": "<Phase 1 browser 驗證的題數>",
+  "apiCount": "<Phase 2 API 驗證的題數>",
   "questions": [
     {
       "qid": "<題目識別碼>",

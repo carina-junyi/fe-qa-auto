@@ -157,6 +157,8 @@ Hint 1/3: cosB = (5²+10²-17²)/(2×5×10) = (5+10-17)/100 = -2/100
   "totalQuestions": <驗證題數>,
   "coveredQids": <覆蓋 qid 數>,
   "totalInPool": <題目池總數>,
+  "browserCount": <Phase 1 browser 驗證的題數>,
+  "apiCount": <Phase 2 API 驗證的題數>,
   "questions": [
     {
       "qid": <數字>,

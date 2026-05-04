@@ -123,7 +123,7 @@ Header:
 Per URL:
   Status       ← json.status（Pass→✓ PASS, Fail→✗ FAIL, Warn→⚠ WARN）
   Duration     ← json.duration
-  Questions    ← json.coveredQids / json.totalInPool
+  Questions    ← json.coveredQids / json.totalInPool (json.browserCount browser, json.apiCount API)
 
 Per Question（僅 Fail 或 Warn 的 URL 需要逐題列出）:
   type         ← json.questions[].type
