@@ -44,11 +44,12 @@ Automated QA testing for Junyi Academy math exercises — validates question ste
 
 ```
 主 Agent:
-  Step 0:  Resolve URLs（展開資料夾 URL）
-  Step 1:  讀取待處理 URL
-  Step 2:  並行 spawn Subagent（每個 URL 一個）
-  Step 3:  收集結果 + 驗證嚴謹度
-  Step 4:  產生 QA report
+  Step 0:  Pre-flight Check（檢查 agent-browser、url_list.txt、scripts/）
+  Step 1:  Resolve URLs（展開資料夾 URL）
+  Step 2:  讀取待處理 URL
+  Step 3:  並行 spawn Subagent（每個 URL 一個）
+  Step 4:  收集結果 + 驗證嚴謹度
+  Step 5:  產生 QA report
 
 Subagent（每個 URL）:
   1. 開啟頁面 + 偵測類型（sequential_quiz / exercise）
