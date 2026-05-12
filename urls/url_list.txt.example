@@ -1,9 +1,17 @@
 # 每行一個 URL，格式：<url> <status>
-# status 可省略（預設 ToDo）
+# status 可省略（預設 ToDo）；以 # 開頭的行為註解，會被略過。
+#
+# Status 說明：
+#   ToDo      — 尚未開始
+#   InProgress — 正在 QA（由系統自動標記）
+#   Pass      — 無數學錯誤
+#   Fail      — 有數學錯誤
+#   Warn      — 數學正確，但 browser 操作有困難（以 API 備援驗證）
 
-# 資料夾連結（自動展開為底下的所有題目）
-# https://www.junyiacademy.org/course-compare/math-elem/math-6/j-m6a/j-m6a-c08/jrc-6-01-2 ToDo
+# ── 資料夾連結（自動展開為底下所有題目）────────────────────────────
+# 加入後執行 /resolve-urls 展開，展開後原行會變成 # [Expanded] 註解
+https://www.junyiacademy.org/course-compare/math-elem/math-5/j-m5a/j-m5a-c13/jnc-5-10-1a ToDo
 
-# 單題連結（直接 QA）
-# https://www.junyiacademy.org/exercises/jnc-6-09-1-5a?topic=... ToDo
-# https://www.junyiacademy.org/exercises/jnc-6-05-1-2f?topic=... ToDo
+# ── 單題連結（直接 QA，不需展開）────────────────────────────────────
+https://www.junyiacademy.org/exercises/jnc-5-10-1-1a?topic=course-compare/math-elem/math-5/j-m5a/j-m5a-c13/jnc-5-10-1a ToDo
+https://www.junyiacademy.org/exercises/jnc-5-10-1-1b?topic=course-compare/math-elem/math-5/j-m5a/j-m5a-c13/jnc-5-10-1a ToDo

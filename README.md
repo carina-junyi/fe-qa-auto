@@ -107,8 +107,65 @@ Subagent（每個 URL）:
 
 ## Prerequisites
 
-- [agent-browser](https://github.com/vercel-labs/agent-browser) installed at `/opt/homebrew/bin/agent-browser`
+- Node.js 18+
 - Claude Code CLI
+- [agent-browser](https://github.com/vercel-labs/agent-browser)
+
+## 安裝與設定
+
+### 1. 安裝 Node.js
+
+**macOS：**
+
+```bash
+brew install node
+```
+
+**Windows：**
+
+```bash
+winget install OpenJS.NodeJS.LTS
+```
+
+> 已安裝者可跳過。確認方式：`node -v`
+
+### 2. 安裝 Claude Code CLI
+
+```bash
+npm install -g @anthropic-ai/claude-code
+```
+
+### 3. 安裝 agent-browser
+
+**macOS（使用 Homebrew）：**
+
+```bash
+brew install agent-browser
+agent-browser install
+```
+
+**Windows：**
+
+```bash
+npm install -g agent-browser
+agent-browser install
+```
+
+### 4. Clone 專案
+
+```bash
+cd <你想放專案的路徑>
+git clone https://github.com/carina-junyi/fe-qa-auto.git
+cd fe-qa-auto
+```
+
+### 5. 建立 URL 清單
+
+```bash
+cp urls/url_list.txt.example urls/url_list.txt
+```
+
+接著編輯 `urls/url_list.txt`，填入要 QA 的 URL（格式見下方 Usage）。
 
 ## Usage
 
@@ -117,8 +174,12 @@ Subagent（每個 URL）:
 在 `urls/url_list.txt` 中貼上要 QA 的 URL（每行一個）：
 
 ```
-https://www.junyiacademy.org/exercises/jnc-6-09-1-5a?topic=... ToDo
-https://www.junyiacademy.org/exercises/jnc-6-05-1-2f?topic=... ToDo
+# 資料夾連結（/resolve-urls 自動展開）
+https://www.junyiacademy.org/course-compare/math-elem/math-5/j-m5a/j-m5a-c13/jnc-5-10-1a ToDo
+
+# 單題連結（直接 QA）
+https://www.junyiacademy.org/exercises/jnc-5-10-1-1a?topic=course-compare/math-elem/math-5/j-m5a/j-m5a-c13/jnc-5-10-1a ToDo
+https://www.junyiacademy.org/exercises/jnc-5-10-1-1b?topic=course-compare/math-elem/math-5/j-m5a/j-m5a-c13/jnc-5-10-1a ToDo
 ```
 
 ### 2. 執行 QA
