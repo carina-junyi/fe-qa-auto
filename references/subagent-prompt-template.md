@@ -239,4 +239,12 @@ Hint 1/3: cosB = (5²+10²-17²)/(2×5×10) = (5+10-17)/100 = -2/100
 - 所有題目 hintsValid=true 且無 errors → status: "Pass"
 - 任一題有 errors → status: "Fail"
 - 數學正確但 browser 操作困難用了 API 備援 → status: "Warn"，notes 標註困難
+
+## 收尾（必須執行）
+
+回傳 JSON 前，關閉 browser session 釋放資源：
+
+```bash
+/opt/homebrew/bin/agent-browser --session {session} close
+```
 ```
