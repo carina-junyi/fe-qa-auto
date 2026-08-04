@@ -35,6 +35,7 @@
   - `set_mq.js` — MathQuill 填值：eval "$(cat scripts/set_mq.js)('LATEX', INDEX)"
   - `set_select.js` — 下拉選單選值：eval "$(cat scripts/set_select.js)(INDEX, 'VALUE')"
   - `focus_drag_item.js` — 聚焦拖曳項目：eval "$(cat scripts/focus_drag_item.js)(INDEX)"
+  - `check_login.js` — 偵測登入狀態（needsLogin / loginOverlayVisible）
 
 - **Skill 詳細流程**：在 `.claude/skills/` 下，需要時用 Read 工具讀取
 
@@ -45,6 +46,46 @@
 ```bash
 /opt/homebrew/bin/agent-browser --session {session} open "{url}"
 /opt/homebrew/bin/agent-browser --session {session} wait 3000
+```
+
+#### Step 1a: 登入檢查（若頁面需要登入）
+
+```bash
+/opt/homebrew/bin/agent-browser --session {session} eval "$(cat scripts/check_login.js)"
+```
+
+若 `needsLogin: true`：
+
+1. 用 Read 工具讀取 `.env`，取得 `JUNYI_EMAIL` 與 `JUNYI_PASSWORD`
+   - 若 `.env` 不存在或帳密為空，標記此 URL 為 `SKIPPED (requires login — no .env)`，直接結束
+
+2. 執行登入流程：
+
+```bash
+/opt/homebrew/bin/agent-browser --session {session} open "https://www.junyiacademy.org/login"
+/opt/homebrew/bin/agent-browser --session {session} wait 2000
+# 填入 email（從 .env 讀取的值）
+/opt/homebrew/bin/agent-browser --session {session} fill "input[name='email'], input[type='email']" "<JUNYI_EMAIL>"
+/opt/homebrew/bin/agent-browser --session {session} fill "input[type='password']" "<JUNYI_PASSWORD>"
+/opt/homebrew/bin/agent-browser --session {session} click "button[type='submit']"
+/opt/homebrew/bin/agent-browser --session {session} wait 3000
+```
+
+3. 再次執行 `check_login.js` 確認登入成功（`needsLogin: false`）
+   - 若仍需登入，標記 `SKIPPED (login failed)` 並結束
+
+4. 重新開啟原始 URL：
+
+```bash
+/opt/homebrew/bin/agent-browser --session {session} open "{url}"
+/opt/homebrew/bin/agent-browser --session {session} wait 3000
+```
+
+> **注意**：`JUNYI_EMAIL` 與 `JUNYI_PASSWORD` 僅用於填入 agent-browser 指令，**不得在任何輸出、log 或回傳 JSON 中顯示密碼明文**。
+
+#### Step 1b: 偵測題組類型
+
+```bash
 /opt/homebrew/bin/agent-browser --session {session} eval "$(cat scripts/probe_page.js)"
 /opt/homebrew/bin/agent-browser --session {session} eval "$(cat scripts/api_recon.js)"
 ```
