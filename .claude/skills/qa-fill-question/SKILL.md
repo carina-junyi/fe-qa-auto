@@ -42,7 +42,42 @@ description: QA Fill-in Question (填充題 QA 流程)
 
 ---
 
-## Step B: 獨立解題並輸入答案
+## Step B: 符號可輸入性驗證（MathQuill 題型必做）
+
+獨立計算出答案後，若答案含以下特殊符號，**必須在使用 `set_mq.js` 填答前**執行此驗證：
+
+| 符號 | LaTeX | 需確認的 autoCommand |
+|------|-------|-------------------|
+| 根號 | `\sqrt{}` | `sqrt` |
+| 圓周率 | `\pi` | `pi` |
+| 無窮大 | `\infty` | `infty` |
+
+```bash
+/opt/homebrew/bin/agent-browser eval "$(cat scripts/check_mq_config.js)"
+```
+
+**判斷邏輯：**
+
+- 若答案含 `\sqrt`，檢查 `sqrtAvailable` 是否為 `true`
+- 若答案含 `\pi`，檢查 `piAvailable` 是否為 `true`
+- 若無法確認（`mqConfigError` 不為 null），以 snapshot/screenshot 人工判斷是否有 keypad 按鈕
+
+**發現符號不可用時：**
+
+```
+errors: [{
+  location: "input_config",
+  content: "答案需輸入根號（\\sqrt），但 MathQuill autoCommands 未包含 sqrt，且無 keypad 根號按鈕，使用者無法輸入正確答案",
+  correctValue: "後台應在 MathQuill 設定中加入 sqrt 至 autoCommands",
+  suggestion: "在 Perseus widget 設定中啟用 sqrt autoCommand"
+}]
+```
+
+**仍使用 `set_mq.js` 提交**（繼續驗證其他項目，如 hints 正確性），並在 notes 標記 `input_symbol_unavailable: sqrt`。
+
+---
+
+## Step C: 獨立解題並輸入答案
 
 根據題幹獨立計算正確答案，然後依輸入框類型用不同方式填入。
 
@@ -115,5 +150,6 @@ description: QA Fill-in Question (填充題 QA 流程)
 - mathquillCount: <MathQuill 輸入框數量>
 - textInputCount: <普通文字輸入框數量>
 - myInputs: [{idx, inputType, value}]
+- symbolCheck: {sqrtAvailable, piAvailable} 或 null（非 MathQuill 題型）
 - notes: <降級紀錄或其他觀察>
 ```

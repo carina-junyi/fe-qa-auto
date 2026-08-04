@@ -122,6 +122,7 @@
 | 圖文一致性 | 圖片中的數值（角度、邊長等）是否與題幹及計算過程一致？ |
 | 選項完整驗證 | 每個選項都必須獨立驗證正確或錯誤，不可只驗證平台標記的答案 |
 | 題幹用語一致性 | 題幹前後的命名、符號是否一致（如不可前半用甲乙丙、後半用 ABC）？ |
+| 填空符號可輸入性 | 填空題答案含根號（√）、π 等特殊符號時，必須驗證 MathQuill 設定是否允許使用者輸入該符號（見下方符號可輸入性驗證） |
 
 ### 圖文一致性驗證（必須遵守）
 
@@ -163,6 +164,34 @@
 - 單位：同一個量不可前後用不同單位且未換算
 
 若發現不一致，標記為 error，指出具體位置。
+
+### 填空符號可輸入性驗證（MathQuill 填空題必做）
+
+若填空題的正確答案含以下符號，**必須在 `set_mq.js` 填答前**執行：
+
+```bash
+/opt/homebrew/bin/agent-browser eval "$(cat scripts/check_mq_config.js)"
+```
+
+| 符號 | 需確認欄位 |
+|------|-----------|
+| 根號 √ | `sqrtAvailable === true` |
+| 圓周率 π | `piAvailable === true` |
+| 無窮大 ∞ | `availableSymbols` 含 `infty` |
+
+若符號不可用，標記 error：
+```
+location: "input_config"
+content: "答案需輸入根號（\\sqrt），但 MathQuill autoCommands 未包含 sqrt，使用者無法輸入正確答案"
+correctValue: "後台應在 MathQuill 設定中啟用 sqrt autoCommand"
+suggestion: "在 Perseus widget 設定中加入 sqrt 至 autoCommands"
+```
+
+仍繼續用 `set_mq.js` 提交並驗證 hints，在 notes 加入 `input_symbol_unavailable: sqrt`。
+
+**不可接受的做法**：
+- ❌ `set_mq.js` 注入成功 → 直接略過符號可輸入性檢查
+- ❌ 只因為 QA bot 能提交就判定平台設定正確
 
 ### 嚴格驗證要求（必須遵守）
 
