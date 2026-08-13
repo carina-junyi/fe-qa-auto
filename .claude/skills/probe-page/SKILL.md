@@ -16,7 +16,7 @@ description: Probe Page (頁面探測)
 取得 accessibility tree 與元素 ref：
 
 ```bash
-/opt/homebrew/bin/agent-browser snapshot
+bin/agent-browser snapshot
 ```
 
 ## Step 2: DOM 探測
@@ -24,7 +24,7 @@ description: Probe Page (頁面探測)
 用 eval 取得頁面骨架、題目數量與題組類型：
 
 ```bash
-/opt/homebrew/bin/agent-browser eval "$(cat scripts/probe_page.js)"
+bin/agent-browser eval "$(cat scripts/probe_page.js)"
 ```
 
 **題組類型說明：**
@@ -40,12 +40,12 @@ description: Probe Page (頁面探測)
 
 1. 截圖視覺確認頁面狀態：
    ```bash
-   /opt/homebrew/bin/agent-browser screenshot
+   bin/agent-browser screenshot
    ```
 
 2. 執行 DOM 探索尋找替代結構：
    ```bash
-   /opt/homebrew/bin/agent-browser eval "$(cat scripts/dom_explore.js)"
+   bin/agent-browser eval "$(cat scripts/dom_explore.js)"
    ```
 
 3. 更新 `page_structures/shared/exercise-layout.md`
@@ -55,7 +55,7 @@ description: Probe Page (頁面探測)
 取得 exercise ID 後，呼叫 API 拿到完整題目池清單：
 
 ```bash
-/opt/homebrew/bin/agent-browser eval "$(cat scripts/api_recon.js)"
+bin/agent-browser eval "$(cat scripts/api_recon.js)"
 ```
 
 API 回傳的資料**僅供以下用途**：

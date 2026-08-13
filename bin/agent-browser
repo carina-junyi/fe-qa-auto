@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+# agent-browser resolver shim — 讓 workflow 文件不用寫死安裝路徑。
+# 解析順序：
+#   1. $AGENT_BROWSER_BIN（明確指定，headless/CI 環境用）
+#   2. /opt/homebrew/bin/agent-browser（Mac brew，原有預設）
+#   3. PATH 上的 agent-browser
+#   4. repo 內 node_modules/.bin/agent-browser（npm install agent-browser）
+set -euo pipefail
+
+SELF="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/$(basename "${BASH_SOURCE[0]}")"
+
+if [ -n "${AGENT_BROWSER_BIN:-}" ]; then
+  exec "$AGENT_BROWSER_BIN" "$@"
+fi
+
+if [ -x /opt/homebrew/bin/agent-browser ]; then
+  exec /opt/homebrew/bin/agent-browser "$@"
+fi
+
+RESOLVED="$(command -v agent-browser 2>/dev/null || true)"
+if [ -n "$RESOLVED" ] && [ "$RESOLVED" != "$SELF" ]; then
+  exec "$RESOLVED" "$@"
+fi
+
+REPO_LOCAL="$(dirname "$SELF")/../node_modules/.bin/agent-browser"
+if [ -x "$REPO_LOCAL" ]; then
+  exec "$REPO_LOCAL" "$@"
+fi
+
+echo "agent-browser not found." >&2
+echo "Install it via one of:" >&2
+echo "  - Mac:   brew install agent-browser && agent-browser install" >&2
+echo "  - Linux: npm install agent-browser && npx agent-browser install  (repo root)" >&2
+echo "  - Or set AGENT_BROWSER_BIN=/path/to/agent-browser" >&2
+exit 127

@@ -13,7 +13,7 @@ QA 自動化過程中發現的平台特殊行為與解法。
 | 5 | 提交後按鈕從「提交答案」變「下一題」 | 用 `find text "下一題" click` 或同一個 ref |
 | 6 | 題組頁含多題，上方有進度圓點 | 逐題做完後點「下一題」 |
 | 7 | MathQuill 輸入框不能用 `fill` | 用 mouse 點擊 + `press` 逐字輸入 |
-| 8 | agent-browser 路徑 | 一律用 `/opt/homebrew/bin/agent-browser` |
+| 8 | agent-browser 安裝位置因環境而異 | 一律經 repo shim `bin/agent-browser` 呼叫 |
 | 9 | `eval` 長 JS 會有 shell quoting 問題 | 放在 `scripts/` 目錄下，用 `eval "$(cat scripts/*.js)"` |
 | 10 | 答錯不會跳題，只有答對才顯示「下一題」 | 用 hints 取得正確答案後提交；若無法輸入則用 JS 強制跳題 |
 | 11 | 「提交答案」按鈕 `find text` 找不到、CSS click 沒反應 | 用 mouse 座標三連擊（move → down → up） |
@@ -28,14 +28,14 @@ QA 自動化過程中發現的平台特殊行為與解法。
 
 **必須用 mouse 座標：**
 ```bash
-/opt/homebrew/bin/agent-browser mouse move <x> <y> && /opt/homebrew/bin/agent-browser mouse down && /opt/homebrew/bin/agent-browser mouse up
+bin/agent-browser mouse move <x> <y> && bin/agent-browser mouse down && bin/agent-browser mouse up
 ```
 
 ### 2. 解題說明按鈕
 
 「解題說明」文字出現在兩處（面板標題 + 側欄按鈕），`find text` 會觸發 strict mode violation。
 
-**永遠用 CSS id：** `/opt/homebrew/bin/agent-browser click "#hint"`
+**永遠用 CSS id：** `bin/agent-browser click "#hint"`
 
 ### 3. 解題說明逐步展開
 
@@ -69,18 +69,22 @@ React-controlled，`fill` 會 timeout。必須 mouse click + `press` 逐字：
 
 ### 8. agent-browser 路徑
 
-永遠使用完整路徑：`/opt/homebrew/bin/agent-browser`
+一律透過 repo 的 shim 呼叫：`bin/agent-browser`（從 repo root 相對路徑，與 `cat scripts/*.js` 同一慣例）。
+
+shim 依序解析實際的執行檔：`$AGENT_BROWSER_BIN` env → `/opt/homebrew/bin/agent-browser`（Mac brew，原有預設）→ PATH → repo 內 `node_modules/.bin/agent-browser`（Linux/headless 環境 `npm install agent-browser`）。找不到時會印出各平台的安裝指引。
+
+不要直接寫絕對路徑——不同環境（Mac brew / Linux npm / CI）安裝位置不同。
 
 ### 9. Shell Quoting for eval
 
 長 JS 放在 `scripts/` 目錄下，用 file-based eval 避免 shell quoting 問題：
 ```bash
-/opt/homebrew/bin/agent-browser eval "$(cat scripts/my_script.js)"
+bin/agent-browser eval "$(cat scripts/my_script.js)"
 ```
 
 含參數的 JS 檔（如 `set_mq.js`、`set_select.js`、`focus_drag_item.js`）以函數呼叫方式傳參：
 ```bash
-/opt/homebrew/bin/agent-browser eval "$(cat scripts/set_mq.js)('\\frac{3}{7}', 0)"
+bin/agent-browser eval "$(cat scripts/set_mq.js)('\\frac{3}{7}', 0)"
 ```
 
 ### 10. 答錯不會自動跳題
@@ -94,8 +98,8 @@ React-controlled，`fill` 會 timeout。必須 mouse click + `press` 逐字：
 1. **用 hints 取得答案**：重複點擊 `#hint` 展開所有步驟，最後一步通常含正確答案（如「答案選 (2)」），用該答案提交即可跳題。
 2. **Reload 頁面**：若題型無法透過 UI 輸入（拖曳、畫圖等），先展開 hints 擷取內容供 QA 報告，再 `reload` 頁面。平台 reload 後會自動載入下一個 unanswered 題目。
    ```bash
-   /opt/homebrew/bin/agent-browser reload
-   /opt/homebrew/bin/agent-browser wait 5000
+   bin/agent-browser reload
+   bin/agent-browser wait 5000
    ```
 
 **注意：JS 強制跳題無效。** 答錯時 `#next-question-button` 帶有 `disabled` 屬性和 `buttonDisabled` class。即使用 JS 移除 disabled 並觸發 click / jQuery trigger，React 框架的事件處理仍會攔截，頁面不會切換。

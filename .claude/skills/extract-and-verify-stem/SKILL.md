@@ -16,7 +16,7 @@ description: Extract and Verify Stem (擷取並驗證題幹)
 在擷取題幹前，先取得該題的 qid（題目識別碼）：
 
 ```bash
-/opt/homebrew/bin/agent-browser eval "$(cat scripts/extract_qid.js)"
+bin/agent-browser eval "$(cat scripts/extract_qid.js)"
 ```
 
 記錄回傳的 `qid`，供後續寫入 QA_result.txt。
@@ -26,7 +26,7 @@ description: Extract and Verify Stem (擷取並驗證題幹)
 使用 `page_structures/shared/question-stem.md` 中的 JS extraction 程式碼，或以下通用版本：
 
 ```bash
-/opt/homebrew/bin/agent-browser eval "$(cat scripts/extract_stem.js)"
+bin/agent-browser eval "$(cat scripts/extract_stem.js)"
 ```
 
 > **重要**：`parseMathML()` 會將 MathML 的 `<mfrac>` 解析為 `(分子/分母)` 格式，避免 `textContent` 將分子分母合併的問題（如 `15/14` 被讀成 `1514`）。
@@ -38,7 +38,7 @@ description: Extract and Verify Stem (擷取並驗證題幹)
 ### 降級 1 — Snapshot
 
 ```bash
-/opt/homebrew/bin/agent-browser snapshot
+bin/agent-browser snapshot
 ```
 
 從 snapshot 的 `article` 區段提取 `text:` 和 `math:` 節點重建題幹。
@@ -46,7 +46,7 @@ description: Extract and Verify Stem (擷取並驗證題幹)
 ### 降級 2 — Screenshot
 
 ```bash
-/opt/homebrew/bin/agent-browser screenshot
+bin/agent-browser screenshot
 ```
 
 由視覺判讀題幹內容。

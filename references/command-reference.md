@@ -1,6 +1,6 @@
 # agent-browser Command Quick Reference
 
-所有指令均使用完整路徑 `/opt/homebrew/bin/agent-browser`。
+所有指令均使用完整路徑 `bin/agent-browser`。
 
 ## 基本操作
 

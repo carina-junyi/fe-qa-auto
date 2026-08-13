@@ -37,9 +37,9 @@ python3 scripts/resolve_urls.py
 退回舊的瀏覽器展開法：
 
 ```bash
-/opt/homebrew/bin/agent-browser open "<folder_url>"
-/opt/homebrew/bin/agent-browser wait 5000
-/opt/homebrew/bin/agent-browser eval "$(cat scripts/extract_exercise_links.js)"
+bin/agent-browser open "<folder_url>"
+bin/agent-browser wait 5000
+bin/agent-browser eval "$(cat scripts/extract_exercise_links.js)"
 ```
 
 取得連結後依 Step 1 相同的格式規則更新 `url_list.txt`。

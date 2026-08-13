@@ -57,13 +57,13 @@ Use `agent-browser select` command with the select element's CSS selector or ref
 
 ```bash
 # By CSS selector (if select has unique position)
-/opt/homebrew/bin/agent-browser select "select.MuiBox-root" "<value>"
+bin/agent-browser select "select.MuiBox-root" "<value>"
 
 # By ref (from snapshot)
-/opt/homebrew/bin/agent-browser select @eN "<value>"
+bin/agent-browser select @eN "<value>"
 
 # Multiple selects: use nth-child or JS to target specific one
-/opt/homebrew/bin/agent-browser eval "document.querySelectorAll('select')[0].value = '2'; document.querySelectorAll('select')[0].dispatchEvent(new Event('change', {bubbles: true}));"
+bin/agent-browser eval "document.querySelectorAll('select')[0].value = '2'; document.querySelectorAll('select')[0].dispatchEvent(new Event('change', {bubbles: true}));"
 ```
 
 **Note:** The `value` parameter is the option's `value` attribute (e.g., `"1"`, `"2"`), NOT the display text (e.g., `"向上"`, `"向下"`).

@@ -20,13 +20,13 @@ description: QA Choice Question (選擇題 QA 流程)
 使用 DOM eval 取得所有選項的文字與數學表達式：
 
 ```bash
-/opt/homebrew/bin/agent-browser eval "$(cat scripts/extract_choices.js)"
+bin/agent-browser eval "$(cat scripts/extract_choices.js)"
 ```
 
 **降級：** 若 DOM eval 失敗（options 為空），用 screenshot 取得選項座標：
 
 ```bash
-/opt/homebrew/bin/agent-browser screenshot
+bin/agent-browser screenshot
 ```
 
 從截圖視覺辨識各選項的位置與內容。
@@ -42,9 +42,9 @@ description: QA Choice Question (選擇題 QA 流程)
 點擊計算出的正確選項：
 
 ```bash
-/opt/homebrew/bin/agent-browser screenshot
+bin/agent-browser screenshot
 # 確認選項座標後點擊
-/opt/homebrew/bin/agent-browser mouse move <x> <y> && /opt/homebrew/bin/agent-browser mouse down && /opt/homebrew/bin/agent-browser mouse up
+bin/agent-browser mouse move <x> <y> && bin/agent-browser mouse down && bin/agent-browser mouse up
 ```
 
 ### 多選題
@@ -52,11 +52,11 @@ description: QA Choice Question (選擇題 QA 流程)
 依序點擊所有正確選項：
 
 ```bash
-/opt/homebrew/bin/agent-browser screenshot
+bin/agent-browser screenshot
 # 逐一點擊每個正確選項
-/opt/homebrew/bin/agent-browser mouse move <x1> <y1> && /opt/homebrew/bin/agent-browser mouse down && /opt/homebrew/bin/agent-browser mouse up
-/opt/homebrew/bin/agent-browser wait 300
-/opt/homebrew/bin/agent-browser mouse move <x2> <y2> && /opt/homebrew/bin/agent-browser mouse down && /opt/homebrew/bin/agent-browser mouse up
+bin/agent-browser mouse move <x1> <y1> && bin/agent-browser mouse down && bin/agent-browser mouse up
+bin/agent-browser wait 300
+bin/agent-browser mouse move <x2> <y2> && bin/agent-browser mouse down && bin/agent-browser mouse up
 ```
 
 ---
