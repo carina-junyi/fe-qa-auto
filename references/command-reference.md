@@ -1,6 +1,6 @@
 # agent-browser Command Quick Reference
 
-所有指令均使用完整路徑 `bin/agent-browser`。
+所有指令一律經 repo 相對路徑 `bin/agent-browser`（shim，於 repo root 執行）呼叫——不要改回絕對路徑，安裝位置因環境而異。
 
 ## 基本操作
 
