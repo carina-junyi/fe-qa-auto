@@ -63,12 +63,15 @@
 
 ```bash
 /opt/homebrew/bin/agent-browser --session {session} open "https://www.junyiacademy.org/login"
-/opt/homebrew/bin/agent-browser --session {session} wait 2000
-# 填入 email（從 .env 讀取的值）
-/opt/homebrew/bin/agent-browser --session {session} fill "input[name='email'], input[type='email']" "<JUNYI_EMAIL>"
-/opt/homebrew/bin/agent-browser --session {session} fill "input[type='password']" "<JUNYI_PASSWORD>"
-/opt/homebrew/bin/agent-browser --session {session} click "button[type='submit']"
 /opt/homebrew/bin/agent-browser --session {session} wait 3000
+# 填入 email（從 .env 讀取的值）。
+# 注意（2026-08-17 實測）：登入頁的帳號欄是「無 name 的 input[type=text]」、
+# 送出鈕是 type=button 的「馬上登入」——input[name='email'] 與
+# button[type='submit'] 都選不到任何元素，登入會靜默失敗。
+/opt/homebrew/bin/agent-browser --session {session} fill "input[type='email'], input[name='email'], input[type='text']" "<JUNYI_EMAIL>"
+/opt/homebrew/bin/agent-browser --session {session} fill "input[type='password']" "<JUNYI_PASSWORD>"
+/opt/homebrew/bin/agent-browser --session {session} find text "馬上登入" click
+/opt/homebrew/bin/agent-browser --session {session} wait 5000
 ```
 
 3. 再次執行 `check_login.js` 確認登入成功（`needsLogin: false`）
