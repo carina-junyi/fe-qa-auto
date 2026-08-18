@@ -15,13 +15,17 @@
 - API 失敗 → 「# [Error: api failed] <原URL>」，其餘行照常處理
 - 結束時印出與舊 skill Step 4 相同格式的摘要
 
-限制（v1）：匿名視角，看不到隱藏（[hidden]）題目——與舊展開法相同
-（topicpage API 對任何權限都過濾隱藏題；隱藏題清單只存在於帶權限
-登入態的資料夾頁 SSR HTML 裡）。含隱藏題的展開屬下一版。
+隱藏（[hidden]）題目：topicpage API 對任何權限都過濾隱藏題，但帶「開發者」
+權限的登入態資料夾頁 SSR HTML（__NEXT_DATA__ 的 dehydratedState）會列出隱藏題。
+本 script 若讀得到 JUNYI_EMAIL / JUNYI_PASSWORD（環境變數或同目錄 .env / 專案根
+.env），會先以純 HTTP 登入取得 KAID cookie，展開時逐 topic 補上 API 看不到的隱藏
+題；讀不到帳密則退回純匿名展開（不含隱藏題），並在摘要註明。密碼只用於登入請求，
+不寫入任何輸出。已知限制：只補「隱藏的題目」，不處理「整個被隱藏的子資料夾」。
 """
 from __future__ import annotations
 
 import json
+import os
 import re
 import sys
 import time
@@ -31,11 +35,16 @@ import urllib.request
 
 BASE = "https://www.junyiacademy.org"
 API = BASE + "/api/v2/content/topicpage/{topic_id}"
+SSR = BASE + "/topics/{topic_id}"
+LOGIN_API = BASE + "/api/v2/user/login"
 UA = "fe-qa-auto/resolve-urls (+https://github.com/carina-junyi/fe-qa-auto)"
 URL_LIST = "urls/url_list.txt"
 MAX_DEPTH = 5  # 巢狀資料夾遞迴上限（type=Topic 的子節點）
 
 ANCHOR_RE = re.compile(r"#topic-page-anchor-([A-Za-z0-9_-]+)")
+NEXT_DATA_RE = re.compile(
+    r'<script id="__NEXT_DATA__"[^>]*>(.*?)</script>', re.DOTALL
+)
 
 
 def topic_id_candidates(url: str) -> list[str]:
@@ -69,25 +78,137 @@ def fetch_topic(topic_id: str) -> dict:
     raise RuntimeError(f"topicpage API failed for {topic_id}: {last_err}")
 
 
-def collect_exercises(topic_id: str, visited: set[str], depth: int = 0) -> list[str]:
-    """回傳絕對題目 URL 清單（deep-first，保持頁面順序）。"""
+def read_credentials() -> tuple[str, str] | None:
+    """取 JUNYI_EMAIL / JUNYI_PASSWORD：優先環境變數，其次 .env 檔。
+
+    .env 找兩處：cwd（QA worker 的工作目錄）與專案根（本檔的上一層）。
+    找不到或任一為空 → 回 None（退回匿名展開）。
+    """
+    email = os.environ.get("JUNYI_EMAIL", "")
+    password = os.environ.get("JUNYI_PASSWORD", "")
+    if not (email and password):
+        here = os.path.dirname(os.path.abspath(__file__))
+        for env_path in (".env", os.path.join(here, os.pardir, ".env")):
+            try:
+                with open(env_path, encoding="utf-8") as fh:
+                    env = fh.read()
+            except OSError:
+                continue
+            email = email or _env_value(env, "JUNYI_EMAIL")
+            password = password or _env_value(env, "JUNYI_PASSWORD")
+            if email and password:
+                break
+    return (email, password) if email and password else None
+
+
+def _env_value(env_text: str, name: str) -> str:
+    m = re.search(rf"^{name}=(.*)$", env_text, re.MULTILINE)
+    return m.group(1).strip().strip("'\"") if m else ""
+
+
+def login_kaid(email: str, password: str) -> str | None:
+    """純 HTTP 登入取得 KAID cookie 值。
+
+    POST /api/v2/user/login {identifier, password} 成功時 body.data.auth 即為
+    KAID cookie 的值（base64 的身分字串）；帶著它請求資料夾頁，SSR 才會以
+    「開發者」視角渲染、含隱藏題。失敗（帳密錯 / 端點異常）回 None。
+    """
+    body = json.dumps({"identifier": email, "password": password}).encode("utf-8")
+    req = urllib.request.Request(
+        LOGIN_API, data=body, headers={"User-Agent": UA, "Content-Type": "application/json"}
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=30) as resp:
+            data = json.loads(resp.read().decode("utf-8")).get("data") or {}
+    except (urllib.error.URLError, TimeoutError, ValueError) as err:
+        print(f"  ! 登入請求失敗：{err}", file=sys.stderr)
+        return None
+    auth = data.get("auth")
+    if not auth:
+        # errors 常見：noEmail（欄位沒讀到）、isInvalidPassword、signupMedium=Google
+        print(f"  ! 登入未取得 KAID（errors={data.get('errors')}）", file=sys.stderr)
+        return None
+    return auth
+
+
+def fetch_hidden_exercises(topic_id: str, kaid: str) -> list[str]:
+    """以 KAID 登入態抓資料夾頁 SSR，回傳「隱藏題」的絕對 URL 清單。
+
+    僅補 topicpage API 過濾掉的隱藏題（title 帶 [hidden]）；可見題仍由 API 展開，
+    不在此重複。best-effort：任何解析失敗都回空清單，不影響匿名展開結果。
+    """
+    req = urllib.request.Request(
+        SSR.format(topic_id=topic_id),
+        headers={"User-Agent": UA, "Cookie": f"KAID={kaid}"},
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=30) as resp:
+            html = resp.read().decode("utf-8")
+        match = NEXT_DATA_RE.search(html)
+        if not match:
+            return []
+        children = _ssr_children(json.loads(match.group(1)))
+    except (urllib.error.URLError, TimeoutError, ValueError) as err:
+        print(f"  ! 隱藏題 SSR 抓取失敗（{topic_id}）：{err}", file=sys.stderr)
+        return []
+    out: list[str] = []
+    for child in children:
+        url = str(child.get("url") or "")
+        title = str(child.get("title") or "")
+        if url.startswith("/exercises/") and "[hidden]" in title:
+            out.append(BASE + url)
+    return out
+
+
+def _ssr_children(next_data: dict) -> list[dict]:
+    """從 __NEXT_DATA__ 取資料夾頁的內容子節點清單。
+
+    react-query 的 dehydratedState 裡，資料夾內容那個 query 的 state.data.children
+    才是我們要的（含 video / 各種 quiz 型題目）；逐 query 找第一個 data 帶
+    children 的即可，不依賴 query 排序。
+    """
+    queries = (
+        next_data.get("props", {})
+        .get("pageProps", {})
+        .get("dehydratedState", {})
+        .get("queries")
+        or []
+    )
+    for query in queries:
+        data = (query.get("state") or {}).get("data")
+        if isinstance(data, dict) and isinstance(data.get("children"), list):
+            return data["children"]
+    return []
+
+
+def collect_exercises(
+    topic_id: str, visited: set[str], kaid: str | None = None, depth: int = 0
+) -> list[tuple[str, bool]]:
+    """回傳 (絕對題目 URL, 是否隱藏題) 清單（deep-first，保持頁面順序）。
+
+    kaid 有值時，每個 topic 於 API 可見題之後，補上該 topic 被 API 過濾掉的隱藏題。
+    """
     if depth > MAX_DEPTH or topic_id in visited:
         return []
     visited.add(topic_id)
     data = fetch_topic(topic_id)
-    out: list[str] = []
+    out: list[tuple[str, bool]] = []
     for child in data.get("child") or []:
         ctype = str(child.get("type", ""))
         if ctype == "Exercise" and child.get("url"):
-            out.append(BASE + child["url"])
+            out.append((BASE + child["url"], False))
         elif ctype == "Topic":
             # 注意：頁內「小節」也是 type=Topic，但 id/url 皆空——自然跳過；
             # 只有帶 url 的真巢狀子資料夾才遞迴。
             sub_url = str(child.get("url") or "")
             if sub_url:
                 out.extend(
-                    collect_exercises(topic_id_candidates(sub_url)[-1], visited, depth + 1)
+                    collect_exercises(
+                        topic_id_candidates(sub_url)[-1], visited, kaid, depth + 1
+                    )
                 )
+    if kaid:
+        out.extend((url, True) for url in fetch_hidden_exercises(topic_id, kaid))
     return out
 
 
@@ -112,8 +233,19 @@ def main() -> int:
         if stripped and not stripped.startswith("#") and "/exercises/" in stripped:
             existing_keys.add(exercise_key(stripped.split()[0]))
 
+    # 有帳密就先登入取 KAID：展開時可補上 API 過濾掉的隱藏題。
+    kaid: str | None = None
+    creds = read_credentials()
+    if creds:
+        kaid = login_kaid(*creds)
+        print(
+            f"- 隱藏題展開：{'已登入（含隱藏題）' if kaid else '登入失敗，退回匿名展開'}"
+        )
+    else:
+        print("- 隱藏題展開：未設定 JUNYI_EMAIL/JUNYI_PASSWORD，匿名展開（不含隱藏題）")
+
     out_lines: list[str] = []
-    n_folders = n_expanded = n_skipped = n_errors = 0
+    n_folders = n_expanded = n_skipped = n_errors = n_hidden = 0
     for line in lines:
         stripped = line.strip()
         if stripped.startswith("# [Expanded]"):
@@ -131,11 +263,11 @@ def main() -> int:
 
         folder_url = stripped.split()[0]
         n_folders += 1
-        found: list[str] = []
+        found: list[tuple[str, bool]] = []
         api_error: RuntimeError | None = None
         for candidate in topic_id_candidates(folder_url):
             try:
-                found = collect_exercises(candidate, visited=set())
+                found = collect_exercises(candidate, visited=set(), kaid=kaid)
             except RuntimeError as err:
                 api_error = err
                 continue
@@ -147,19 +279,20 @@ def main() -> int:
             out_lines.append(f"# [Error: api failed] {folder_url}")
             n_errors += 1
             continue
-        fresh = []
-        for url in found:
+        fresh: list[tuple[str, bool]] = []
+        for url, hidden in found:
             key = exercise_key(url)
             if key not in existing_keys:
                 existing_keys.add(key)
-                fresh.append(url)
+                fresh.append((url, hidden))
         if not fresh and not found:
             out_lines.append(f"# [Error: no exercises found] {folder_url}")
             n_errors += 1
             continue
         out_lines.append(f"# [Expanded] {folder_url}")
-        out_lines.extend(f"{url} ToDo" for url in fresh)
+        out_lines.extend(f"{url} ToDo" for url, _ in fresh)
         n_expanded += len(fresh)
+        n_hidden += sum(1 for _, hidden in fresh if hidden)
 
     if not dry_run:
         with open(URL_LIST, "w", encoding="utf-8") as fh:
@@ -168,6 +301,8 @@ def main() -> int:
     print("URL 展開結果：")
     print(f"- 資料夾 URL 數量: {n_folders}")
     print(f"- 展開的題目 URL 總數: {n_expanded}")
+    if kaid:
+        print(f"- 其中隱藏題: {n_hidden}")
     print(f"- 略過（已展開）: {n_skipped}")
     print(f"- 錯誤: {n_errors}")
     print(f"- {URL_LIST} {'未變更（--dry-run）' if dry_run else '已更新'}")
