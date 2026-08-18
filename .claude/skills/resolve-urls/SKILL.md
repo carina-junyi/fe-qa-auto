@@ -11,69 +11,41 @@ description: Resolve URLs (展開資料夾連結)
 
 ---
 
-## Step 1: 讀取 url_list.txt
+## Step 1: 執行展開 script
 
-讀取 `urls/url_list.txt`，逐行判斷 URL 類型：
+```bash
+python3 scripts/resolve_urls.py
+```
 
-| 特徵 | 類型 | 處理方式 |
-|------|------|----------|
-| URL 含 `/exercises/` | 題目 URL | 保留不動 |
-| URL 不含 `/exercises/`（如 `/course-compare/...`） | 資料夾 URL | 需要展開 |
-| 以 `#` 開頭 | 註解 | 跳過 |
+展開是**決定性 script**（直接打均一的 topicpage API），不需開瀏覽器：
 
-**若沒有資料夾 URL，直接結束，不做任何變更。**
+- 資料夾 URL（junyiacademy URL 且不含 `/exercises/`）→ 換成
+  `# [Expanded] <原URL>` ＋ 底下每題一行 `<題目URL> ToDo`
+- 已展開（`# [Expanded]`）不重複展開（冪等）；已存在的題目 URL 不重複新增（去重）
+- 巢狀子資料夾自動遞迴；`#topic-page-anchor-...` 連結先試小節、退回整頁
+- 展不出題目 → 該行標 `# [Error: no exercises found]`；API 掛掉 → `# [Error: api failed]`
+- script 結束時自行印出展開摘要（資料夾數／展開題數／略過／錯誤）
 
-## Step 2: 展開資料夾 URL
+**把 script 印出的摘要原樣轉述，不要重算。**
 
-對每個資料夾 URL：
+> **限制：** API 是匿名視角，**看不到隱藏（[hidden]）題目**——與舊的瀏覽器展開法相同。
+> 隱藏題目前請使用者直接提供單題 URL。
 
-### 2a. 開啟頁面
+## Step 2: 失敗時的 fallback（僅當 script 整體失敗）
+
+僅在 `resolve_urls.py` 本身無法執行（例如 python3 缺失、script 損毀）時，
+退回舊的瀏覽器展開法：
 
 ```bash
 /opt/homebrew/bin/agent-browser open "<folder_url>"
 /opt/homebrew/bin/agent-browser wait 5000
-```
-
-### 2b. 擷取題目連結
-
-```bash
 /opt/homebrew/bin/agent-browser eval "$(cat scripts/extract_exercise_links.js)"
 ```
 
-### 2c. 處理失敗
+取得連結後依 Step 1 相同的格式規則更新 `url_list.txt`。
+個別資料夾的 `# [Error: ...]` 標記**不是** fallback 的觸發條件——那是正常結果，照實回報即可。
 
-若 `count` 為 0 或 eval 報錯：
-
-1. 截圖確認頁面狀態
-2. 若為登入牆，標記為 `# [Error: requires login] <url>`
-3. 若頁面載入失敗，重試一次（`reload` + `wait 5000`）
-4. 仍無法取得連結，標記為 `# [Error: no exercises found] <url>`
-
-## Step 3: 更新 url_list.txt
-
-將資料夾 URL 行替換為展開後的題目 URL：
-
-**替換前：**
-```
-https://www.junyiacademy.org/course-compare/math-elem/math-5/k-m5a/k-m5a-c02 ToDo
-```
-
-**替換後：**
-```
-# [Expanded] https://www.junyiacademy.org/course-compare/math-elem/math-5/k-m5a/k-m5a-c02
-https://www.junyiacademy.org/exercises/menzs5ba?topic=course-compare/math-elem/math-5/k-m5a/k-m5a-c02 ToDo
-https://www.junyiacademy.org/exercises/m3ayb-aa?topic=course-compare/math-elem/math-5/k-m5a/k-m5a-c02 ToDo
-...
-```
-
-### 規則
-
-- 展開後的題目 URL 狀態一律設為 `ToDo`
-- 原資料夾 URL 變成 `# [Expanded]` 註解（保留來源追溯）
-- 已有 `# [Expanded]` 標記的資料夾不重複展開（冪等性）
-- 已存在於 `url_list.txt` 的題目 URL 不重複新增（去重）
-
-## Step 4: 輸出摘要
+## Step 3: 輸出摘要
 
 ```
 URL 展開結果：
