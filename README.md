@@ -151,6 +151,17 @@ npm install -g agent-browser
 agent-browser install
 ```
 
+**Linux / headless server：**
+
+```bash
+# 在 repo root 執行（clone 後）；系統相依（libnss3 等）依 install 提示補裝
+npm install agent-browser
+npx agent-browser install
+```
+
+> Workflow 一律透過 repo 的 `bin/agent-browser` shim 呼叫，會自動依環境解析實際安裝位置
+> （`$AGENT_BROWSER_BIN` → Homebrew → PATH → repo 內 `node_modules/.bin`），不需改任何文件。
+
 ### 4. Clone 專案
 
 ```bash

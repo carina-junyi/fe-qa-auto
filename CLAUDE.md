@@ -47,7 +47,7 @@
 
 | # | 檢查項目 | 檢查方式 | 失敗時提示 |
 |---|---------|---------|----------|
-| 1 | `agent-browser` 是否已安裝 | `which /opt/homebrew/bin/agent-browser` | 請先安裝：`brew install agent-browser && agent-browser install` |
+| 1 | `agent-browser` 是否已安裝 | `bin/agent-browser --version`（shim 會依序找 `$AGENT_BROWSER_BIN` → brew → PATH → repo 內 npm） | 依 shim 的錯誤訊息安裝：Mac `brew install agent-browser`、Linux `npm install agent-browser`，或設 `AGENT_BROWSER_BIN` |
 | 2 | `urls/url_list.txt` 是否存在 | 檢查檔案是否存在 | 請先建立：`cp urls/url_list.txt.example urls/url_list.txt` 並填入要 QA 的 URL |
 | 3 | `url_list.txt` 中是否有 ToDo 的 URL | 讀取檔案，篩選 ToDo 或無狀態的行 | 沒有待處理的 URL，請在 url_list.txt 中加入 URL（狀態設為 ToDo 或留空） |
 | 4 | `scripts/` 目錄的 JS 檔案是否完整 | 檢查是否有 18 個 .js 檔案 | 缺少 JS 工具檔，請確認 scripts/ 目錄完整（應有 18 個 .js 檔案） |

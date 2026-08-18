@@ -1,0 +1,66 @@
+#!/usr/bin/env bash
+# agent-browser resolver shim — 讓 workflow 文件不用寫死安裝路徑。
+# 解析順序：
+#   1. $AGENT_BROWSER_BIN（明確指定，headless/CI 環境用）
+#   2. PATH 上的 agent-browser（涵蓋 Intel Mac 的 /usr/local/bin 等）
+#   3. /opt/homebrew/bin（Apple Silicon brew）、/usr/local/bin（Intel brew）
+#   4. repo 內 node_modules/.bin/agent-browser（npm install agent-browser）
+set -euo pipefail
+unset CDPATH  # 使用者 shell 匯出的 CDPATH 會污染 $(cd ...) 的解析
+
+# 防遞迴：任何解析分支若繞回 shim 自己（env 指回來、PATH 含相對路徑等），
+# 第二次進入直接報錯而不是無限 exec。
+if [ -n "${_AGENT_BROWSER_SHIM:-}" ]; then
+  echo "bin/agent-browser: recursion detected — a resolution branch points back at this shim." >&2
+  echo "Check \$AGENT_BROWSER_BIN and PATH entries." >&2
+  exit 127
+fi
+export _AGENT_BROWSER_SHIM=1
+
+# 物理路徑解析（穿透 symlink），讓 repo-local fallback 在 shim 被
+# symlink 到別處（如 ~/bin）時仍找得到 repo 的 node_modules。
+SCRIPT="${BASH_SOURCE[0]}"
+SELF_DIR="$(cd -- "$(dirname -- "$SCRIPT")" >/dev/null 2>&1 && pwd -P)"
+while [ -L "$SCRIPT" ]; do
+  TARGET="$(readlink "$SCRIPT")"
+  case "$TARGET" in
+    /*) SCRIPT="$TARGET" ;;
+    *)  SCRIPT="$SELF_DIR/$TARGET" ;;
+  esac
+  SELF_DIR="$(cd -- "$(dirname -- "$SCRIPT")" >/dev/null 2>&1 && pwd -P)"
+done
+SELF_PHYS="$SELF_DIR/$(basename -- "$SCRIPT")"
+
+# 回傳引數的物理絕對路徑（檔案不存在則輸出空字串）
+phys() {
+  local d b
+  d="$(dirname -- "$1")"; b="$(basename -- "$1")"
+  ( cd -- "$d" >/dev/null 2>&1 && printf '%s/%s\n' "$(pwd -P)" "$b" ) || true
+}
+
+if [ -n "${AGENT_BROWSER_BIN:-}" ]; then
+  exec "$AGENT_BROWSER_BIN" "$@"
+fi
+
+RESOLVED="$(command -v agent-browser 2>/dev/null || true)"
+if [ -n "$RESOLVED" ] && [ "$(phys "$RESOLVED")" != "$SELF_PHYS" ]; then
+  exec "$RESOLVED" "$@"
+fi
+
+for CANDIDATE in /opt/homebrew/bin/agent-browser /usr/local/bin/agent-browser; do
+  if [ -x "$CANDIDATE" ]; then
+    exec "$CANDIDATE" "$@"
+  fi
+done
+
+REPO_LOCAL="$SELF_DIR/../node_modules/.bin/agent-browser"
+if [ -x "$REPO_LOCAL" ]; then
+  exec "$REPO_LOCAL" "$@"
+fi
+
+echo "agent-browser not found." >&2
+echo "Install it via one of:" >&2
+echo "  - Mac:   brew install agent-browser && agent-browser install" >&2
+echo "  - Linux: npm install agent-browser && npx agent-browser install  (repo root)" >&2
+echo "  - Or set AGENT_BROWSER_BIN=/path/to/agent-browser (the real binary, not this shim)" >&2
+exit 127

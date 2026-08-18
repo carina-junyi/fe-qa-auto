@@ -14,7 +14,7 @@ description: Identify Question Type (判斷題型)
 將以下 JS 寫入暫存檔後用 `eval` 執行：
 
 ```bash
-/opt/homebrew/bin/agent-browser eval "$(cat scripts/identify_qtype.js)"
+bin/agent-browser eval "$(cat scripts/identify_qtype.js)"
 ```
 
 ### 2. 判定 DOM 探測失敗
@@ -24,7 +24,7 @@ description: Identify Question Type (判斷題型)
 ### 3. 降級 1 — Snapshot
 
 ```bash
-/opt/homebrew/bin/agent-browser snapshot
+bin/agent-browser snapshot
 ```
 
 從 snapshot 的 accessibility tree 判斷：
@@ -40,7 +40,7 @@ description: Identify Question Type (判斷題型)
 ### 4. 降級 2 — Screenshot
 
 ```bash
-/opt/homebrew/bin/agent-browser screenshot
+bin/agent-browser screenshot
 ```
 
 從截圖視覺判斷：
@@ -80,14 +80,14 @@ description: Identify Question Type (判斷題型)
 #### 6a. 截圖 + snapshot 記錄頁面現況
 
 ```bash
-/opt/homebrew/bin/agent-browser screenshot
-/opt/homebrew/bin/agent-browser snapshot
+bin/agent-browser screenshot
+bin/agent-browser snapshot
 ```
 
 #### 6b. DOM 探索，嘗試辨識新的元素結構
 
 ```bash
-/opt/homebrew/bin/agent-browser eval "$(cat scripts/dom_explore.js)"
+bin/agent-browser eval "$(cat scripts/dom_explore.js)"
 ```
 
 #### 6c. 將探索結果寫入 page_structures/

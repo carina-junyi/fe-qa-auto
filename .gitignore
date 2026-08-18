@@ -3,3 +3,6 @@
 urls/url_list.txt
 QA_result.txt
 .env
+node_modules/
+package.json
+package-lock.json

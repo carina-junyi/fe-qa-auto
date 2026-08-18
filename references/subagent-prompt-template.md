@@ -44,14 +44,14 @@
 ### Step 1: 開啟頁面並偵測類型
 
 ```bash
-/opt/homebrew/bin/agent-browser --session {session} open "{url}"
-/opt/homebrew/bin/agent-browser --session {session} wait 3000
+bin/agent-browser --session {session} open "{url}"
+bin/agent-browser --session {session} wait 3000
 ```
 
 #### Step 1a: 登入檢查（若頁面需要登入）
 
 ```bash
-/opt/homebrew/bin/agent-browser --session {session} eval "$(cat scripts/check_login.js)"
+bin/agent-browser --session {session} eval "$(cat scripts/check_login.js)"
 ```
 
 若 `needsLogin: true`：
@@ -62,16 +62,16 @@
 2. 執行登入流程：
 
 ```bash
-/opt/homebrew/bin/agent-browser --session {session} open "https://www.junyiacademy.org/login"
-/opt/homebrew/bin/agent-browser --session {session} wait 3000
+bin/agent-browser --session {session} open "https://www.junyiacademy.org/login"
+bin/agent-browser --session {session} wait 3000
 # 填入 email（從 .env 讀取的值）。
 # 注意（2026-08-17 實測）：登入頁的帳號欄是「無 name 的 input[type=text]」、
 # 送出鈕是 type=button 的「馬上登入」——input[name='email'] 與
 # button[type='submit'] 都選不到任何元素，登入會靜默失敗。
-/opt/homebrew/bin/agent-browser --session {session} fill "input[type='email'], input[name='email'], input[type='text']" "<JUNYI_EMAIL>"
-/opt/homebrew/bin/agent-browser --session {session} fill "input[type='password']" "<JUNYI_PASSWORD>"
-/opt/homebrew/bin/agent-browser --session {session} find text "馬上登入" click
-/opt/homebrew/bin/agent-browser --session {session} wait 5000
+bin/agent-browser --session {session} fill "input[type='email'], input[name='email'], input[type='text']" "<JUNYI_EMAIL>"
+bin/agent-browser --session {session} fill "input[type='password']" "<JUNYI_PASSWORD>"
+bin/agent-browser --session {session} find text "馬上登入" click
+bin/agent-browser --session {session} wait 5000
 ```
 
 3. 再次執行 `check_login.js` 確認登入成功（`needsLogin: false`）
@@ -80,8 +80,8 @@
 4. 重新開啟原始 URL：
 
 ```bash
-/opt/homebrew/bin/agent-browser --session {session} open "{url}"
-/opt/homebrew/bin/agent-browser --session {session} wait 3000
+bin/agent-browser --session {session} open "{url}"
+bin/agent-browser --session {session} wait 3000
 ```
 
 > **注意**：`JUNYI_EMAIL` 與 `JUNYI_PASSWORD` 僅用於填入 agent-browser 指令，**不得在任何輸出、log 或回傳 JSON 中顯示密碼明文**。
@@ -89,8 +89,8 @@
 #### Step 1b: 偵測題組類型
 
 ```bash
-/opt/homebrew/bin/agent-browser --session {session} eval "$(cat scripts/probe_page.js)"
-/opt/homebrew/bin/agent-browser --session {session} eval "$(cat scripts/api_recon.js)"
+bin/agent-browser --session {session} eval "$(cat scripts/probe_page.js)"
+bin/agent-browser --session {session} eval "$(cat scripts/api_recon.js)"
 ```
 
 根據 `exerciseMode` 決定策略：
@@ -214,7 +214,7 @@
 若填空題的正確答案含以下符號，**必須在 `set_mq.js` 填答前**執行：
 
 ```bash
-/opt/homebrew/bin/agent-browser eval "$(cat scripts/check_mq_config.js)"
+bin/agent-browser eval "$(cat scripts/check_mq_config.js)"
 ```
 
 | 符號 | 需確認欄位 |
@@ -318,6 +318,6 @@ Hint 1/3: cosB = (5²+10²-17²)/(2×5×10) = (5+10-17)/100 = -2/100
 回傳 JSON 前，關閉 browser session 釋放資源：
 
 ```bash
-/opt/homebrew/bin/agent-browser --session {session} close
+bin/agent-browser --session {session} close
 ```
 ```

@@ -20,7 +20,7 @@ description: QA Drag-Sort Question (拖曳排序題 QA 流程)
 使用 DOM eval 取得所有 draggable 項目的當前順序與內容：
 
 ```bash
-/opt/homebrew/bin/agent-browser eval "$(cat scripts/extract_drag_items.js)"
+bin/agent-browser eval "$(cat scripts/extract_drag_items.js)"
 ```
 
 **降級：** 若 DOM eval 失敗：
@@ -29,8 +29,8 @@ description: QA Drag-Sort Question (拖曳排序題 QA 流程)
 2. **screenshot** — 視覺辨識可拖曳的方框項目
 
 ```bash
-/opt/homebrew/bin/agent-browser snapshot
-/opt/homebrew/bin/agent-browser screenshot
+bin/agent-browser snapshot
+bin/agent-browser screenshot
 ```
 
 ---
@@ -51,23 +51,23 @@ description: QA Drag-Sort Question (拖曳排序題 QA 流程)
 
 ```bash
 # 1. Focus 目標項目（傳入當前位置索引）
-/opt/homebrew/bin/agent-browser eval "$(cat scripts/focus_drag_item.js)(CURRENT_POSITION_INDEX)"
+bin/agent-browser eval "$(cat scripts/focus_drag_item.js)(CURRENT_POSITION_INDEX)"
 
 # 2. Space 拿起
-/opt/homebrew/bin/agent-browser press " "
-/opt/homebrew/bin/agent-browser wait 300
+bin/agent-browser press " "
+bin/agent-browser wait 300
 
 # 3. Arrow 移動（重複 N 次）
 # 向左移動：
-/opt/homebrew/bin/agent-browser press ArrowLeft
-/opt/homebrew/bin/agent-browser wait 200
+bin/agent-browser press ArrowLeft
+bin/agent-browser wait 200
 # 向右移動：
-/opt/homebrew/bin/agent-browser press ArrowRight
-/opt/homebrew/bin/agent-browser wait 200
+bin/agent-browser press ArrowRight
+bin/agent-browser wait 200
 
 # 4. Space 放下
-/opt/homebrew/bin/agent-browser press " "
-/opt/homebrew/bin/agent-browser wait 300
+bin/agent-browser press " "
+bin/agent-browser wait 300
 ```
 
 ### 完整排序範例
@@ -88,7 +88,7 @@ description: QA Drag-Sort Question (拖曳排序題 QA 流程)
 排序完成後，驗證最終順序是否正確：
 
 ```bash
-/opt/homebrew/bin/agent-browser eval "$(cat scripts/extract_drag_items.js)"
+bin/agent-browser eval "$(cat scripts/extract_drag_items.js)"
 ```
 
 比對回傳的 items 順序是否與計算的目標順序一致。若不一致，重新執行排序。

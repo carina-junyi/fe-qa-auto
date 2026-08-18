@@ -20,7 +20,7 @@ description: QA Dropdown Question (下拉選單題 QA 流程)
 使用 DOM eval 取得所有 `<select>` 元素的選項與位置：
 
 ```bash
-/opt/homebrew/bin/agent-browser eval "$(cat scripts/extract_dropdown.js)"
+bin/agent-browser eval "$(cat scripts/extract_dropdown.js)"
 ```
 
 **降級：** 若 DOM eval 失敗：
@@ -29,8 +29,8 @@ description: QA Dropdown Question (下拉選單題 QA 流程)
 2. **screenshot** — 視覺辨識下拉選單（帶下拉箭頭的矩形框）
 
 ```bash
-/opt/homebrew/bin/agent-browser snapshot
-/opt/homebrew/bin/agent-browser screenshot
+bin/agent-browser snapshot
+bin/agent-browser screenshot
 ```
 
 ---
@@ -43,10 +43,10 @@ description: QA Dropdown Question (下拉選單題 QA 流程)
 
 ```bash
 # 方法 1：用 snapshot ref
-/opt/homebrew/bin/agent-browser select @eN "<value>"
+bin/agent-browser select @eN "<value>"
 
 # 方法 2：用 JS 指定特定 select（傳入 index 和 value）
-/opt/homebrew/bin/agent-browser eval "$(cat scripts/set_select.js)(0, '<value>')"
+bin/agent-browser eval "$(cat scripts/set_select.js)(0, '<value>')"
 ```
 
 **重要：** `<value>` 是 option 的 `value` 屬性（如 `"1"`, `"2"`），不是顯示文字（如 `"向上"`, `"向下"`）。第一個選項（value `"0"`）通常是 disabled 的 placeholder。
@@ -57,8 +57,8 @@ description: QA Dropdown Question (下拉選單題 QA 流程)
 
 ```bash
 # 依序對每個 select 設定值，用不同 index：
-/opt/homebrew/bin/agent-browser eval "$(cat scripts/set_select.js)(0, '<value_for_first>')"
-/opt/homebrew/bin/agent-browser eval "$(cat scripts/set_select.js)(1, '<value_for_second>')"
+bin/agent-browser eval "$(cat scripts/set_select.js)(0, '<value_for_first>')"
+bin/agent-browser eval "$(cat scripts/set_select.js)(1, '<value_for_second>')"
 ```
 
 ---

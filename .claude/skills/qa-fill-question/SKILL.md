@@ -25,7 +25,7 @@ description: QA Fill-in Question (填充題 QA 流程)
 使用 DOM eval 取得所有輸入框的位置與目前值：
 
 ```bash
-/opt/homebrew/bin/agent-browser eval "$(cat scripts/extract_inputs.js)"
+bin/agent-browser eval "$(cat scripts/extract_inputs.js)"
 ```
 
 **降級：** 若 DOM eval 失敗（totalCount 為 0 或指令報錯）：
@@ -34,8 +34,8 @@ description: QA Fill-in Question (填充題 QA 流程)
 2. **screenshot** — 視覺辨識輸入框位置（白色矩形帶灰色邊框）
 
 ```bash
-/opt/homebrew/bin/agent-browser snapshot
-/opt/homebrew/bin/agent-browser screenshot
+bin/agent-browser snapshot
+bin/agent-browser screenshot
 ```
 
 降級時記錄到 Notes：`DOM input extraction failed, fell back to snapshot/screenshot`
@@ -53,7 +53,7 @@ description: QA Fill-in Question (填充題 QA 流程)
 | 無窮大 | `\infty` | `infty` |
 
 ```bash
-/opt/homebrew/bin/agent-browser eval "$(cat scripts/check_mq_config.js)"
+bin/agent-browser eval "$(cat scripts/check_mq_config.js)"
 ```
 
 **判斷邏輯：**
@@ -87,12 +87,12 @@ errors: [{
 
 ```bash
 # 方法 1：用 snapshot ref（推薦）
-/opt/homebrew/bin/agent-browser fill @eN "<answer>"
+bin/agent-browser fill @eN "<answer>"
 
 # 方法 2：點擊後用 keyboard 輸入
-/opt/homebrew/bin/agent-browser mouse move <x> <y> && /opt/homebrew/bin/agent-browser mouse down && /opt/homebrew/bin/agent-browser mouse up
-/opt/homebrew/bin/agent-browser wait 300
-/opt/homebrew/bin/agent-browser keyboard type "<answer>"
+bin/agent-browser mouse move <x> <y> && bin/agent-browser mouse down && bin/agent-browser mouse up
+bin/agent-browser wait 300
+bin/agent-browser keyboard type "<answer>"
 ```
 
 ### MathQuill 輸入框
@@ -103,7 +103,7 @@ errors: [{
 
 ```bash
 # 傳入 LaTeX 字串和 MathQuill 欄位索引（從 0 開始）
-/opt/homebrew/bin/agent-browser eval "$(cat scripts/set_mq.js)('<LATEX>', 0)"
+bin/agent-browser eval "$(cat scripts/set_mq.js)('<LATEX>', 0)"
 ```
 
 **常用 LaTeX 格式：**
@@ -125,10 +125,10 @@ errors: [{
 
 ```bash
 # 點擊輸入框聚焦
-/opt/homebrew/bin/agent-browser mouse move <x> <y> && /opt/homebrew/bin/agent-browser mouse down && /opt/homebrew/bin/agent-browser mouse up
-/opt/homebrew/bin/agent-browser wait 300
+bin/agent-browser mouse move <x> <y> && bin/agent-browser mouse down && bin/agent-browser mouse up
+bin/agent-browser wait 300
 # 逐字輸入答案
-/opt/homebrew/bin/agent-browser press "<char1>" && /opt/homebrew/bin/agent-browser press "<char2>"
+bin/agent-browser press "<char1>" && bin/agent-browser press "<char2>"
 ```
 
 **注意：** 逐字輸入無法可靠輸入帶分數，請優先使用方法 1。
