@@ -28,8 +28,11 @@ python3 scripts/resolve_urls.py
 
 **把 script 印出的摘要原樣轉述，不要重算。**
 
-> **限制：** API 是匿名視角，**看不到隱藏（[hidden]）題目**——與舊的瀏覽器展開法相同。
-> 隱藏題目前請使用者直接提供單題 URL。
+> **隱藏題（[hidden]）：** topicpage API 對任何權限都過濾隱藏題，但 script 若讀得到
+> `JUNYI_EMAIL` / `JUNYI_PASSWORD`（環境變數或 `.env`），會先純 HTTP 登入取得開發者
+> 權限的 KAID cookie，展開時自動補上 API 看不到的隱藏題，並在摘要多印一行
+> `- 其中隱藏題: <N>`。摘要出現該行＝隱藏題已含在展開結果裡，**不必**再請使用者貼單題
+> URL。讀不到帳密時退回匿名展開（不含隱藏題），摘要會註明。
 
 ## Step 2: 失敗時的 fallback（僅當 script 整體失敗）
 
