@@ -211,29 +211,35 @@ bin/agent-browser --session {session} eval "$(cat scripts/api_recon.js)"
 
 ### 填空符號可輸入性驗證（MathQuill 填空題必做）
 
-若填空題的正確答案含以下符號，**必須在 `set_mq.js` 填答前**執行：
+若填空題的正確答案含特殊符號（√、π 等），**必須透過 `api_recon.js` 已取得的題目 JSON 檢查 `buttonSets` 欄位**，而非依賴 runtime 的 `check_mq_config.js`。
 
-```bash
-bin/agent-browser eval "$(cat scripts/check_mq_config.js)"
-```
+> **為何改用 API 資料**：`check_mq_config.js` 讀取的是 MathQuill runtime 實例設定，可能與後台建題設定不一致，導致誤報。`buttonSets` 才是建題者設定的 source of truth。
 
-| 符號 | 需確認欄位 |
-|------|-----------|
-| 根號 √ | `sqrtAvailable === true` |
-| 圓周率 π | `piAvailable === true` |
-| 無窮大 ∞ | `availableSymbols` 含 `infty` |
+**判斷方式**：從 `api_recon.js` 結果中找到對應 expression widget，讀取其 `buttonSets` 陣列：
 
-若符號不可用，標記 error：
+| 答案含此符號 | 需確認 buttonSets 包含 |
+|-------------|----------------------|
+| 根號 √ | `"prealgebra"` |
+| 圓周率 π | `"prealgebra"` |
+| 不等式 ≤ ≥ ≠ | `"relations"` |
+| 三角函數 sin cos tan | `"trig"` |
+
+**判斷流程**：
+1. 答案含特殊符號 → 從 api_recon 結果取對應 widget 的 `buttonSets`
+2. **包含對應 buttonSet** → 符號可輸入，直接進行 `set_mq.js` 填答，**不報錯**
+3. **不包含對應 buttonSet** → 標記 error：
+
 ```
 location: "input_config"
-content: "答案需輸入根號（\\sqrt），但 MathQuill autoCommands 未包含 sqrt，使用者無法輸入正確答案"
-correctValue: "後台應在 MathQuill 設定中啟用 sqrt autoCommand"
-suggestion: "在 Perseus widget 設定中加入 sqrt 至 autoCommands"
+content: "答案需輸入根號（\\sqrt），但後台 expression buttonSets 未包含 prealgebra，使用者無法透過鍵盤輸入根號"
+correctValue: "後台應在 expression widget 設定中將 buttonSets 加入 prealgebra"
+suggestion: "建題時勾選 prealgebra 選項以啟用根號輸入按鈕"
 ```
 
 仍繼續用 `set_mq.js` 提交並驗證 hints，在 notes 加入 `input_symbol_unavailable: sqrt`。
 
 **不可接受的做法**：
+- ❌ 用 `check_mq_config.js` 的 runtime 結果判斷符號是否可輸入（易誤報）
 - ❌ `set_mq.js` 注入成功 → 直接略過符號可輸入性檢查
 - ❌ 只因為 QA bot 能提交就判定平台設定正確
 

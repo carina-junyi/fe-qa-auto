@@ -173,7 +173,7 @@ Subagent 的詳細執行流程定義在 `references/subagent-prompt-template.md`
 - **圖文一致性**：圖片中的數值（角度、邊長等）必須與題幹及計算過程交叉比對，不一致即為 error
 - **選項完整驗證**：選擇題必須獨立驗證每一個選項的正確性，不可只驗證平台標記的答案
 - **題幹用語一致性**：檢查題幹前後的命名、符號是否一致（如不可前半用甲乙丙、後半用 ABC）
-- **填空符號可輸入性**：填空題答案含根號（√）、π 等特殊符號時，用 `check_mq_config.js` 驗證 MathQuill 設定是否允許輸入；`set_mq.js` 能注入≠平台設定正確
+- **填空符號可輸入性**：填空題答案含根號（√）、π 等特殊符號時，從 `api_recon.js` 結果讀取 expression 的 `buttonSets` 欄位判斷（包含 `"prealgebra"` 才算可輸入）；不可用 `check_mq_config.js` runtime 結果判斷（易誤報）；`set_mq.js` 能注入 ≠ 平台設定正確
 
 ---
 
