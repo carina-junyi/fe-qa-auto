@@ -46,6 +46,7 @@
 ```bash
 bin/agent-browser --session {session} open "{url}"
 bin/agent-browser --session {session} wait 3000
+bin/agent-browser --session {session} eval "$(cat scripts/mute_audio.js)"
 ```
 
 #### Step 1a: 登入檢查（若頁面需要登入）
@@ -82,6 +83,7 @@ bin/agent-browser --session {session} wait 5000
 ```bash
 bin/agent-browser --session {session} open "{url}"
 bin/agent-browser --session {session} wait 3000
+bin/agent-browser --session {session} eval "$(cat scripts/mute_audio.js)"
 ```
 
 > **注意**：`JUNYI_EMAIL` 與 `JUNYI_PASSWORD` 僅用於填入 agent-browser 指令，**不得在任何輸出、log 或回傳 JSON 中顯示密碼明文**。
