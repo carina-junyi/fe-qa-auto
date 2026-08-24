@@ -1,7 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "Bash(bin/agent-browser eval *)"
+      "Bash(bin/agent-browser eval *)",
+      "Bash(/opt/homebrew/bin/agent-browser eval *)"
     ]
   }
 }
