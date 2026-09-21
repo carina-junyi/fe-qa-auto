@@ -6,3 +6,4 @@ QA_result.txt
 node_modules/
 package.json
 package-lock.json
+questions/

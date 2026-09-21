@@ -37,7 +37,7 @@ Automated QA testing for Junyi Academy exercises (all subjects) — validates qu
 
 | URL 類型 | 範例 | 處理方式 |
 |----------|------|----------|
-| **題目 URL** | `https://www.junyiacademy.org/exercises/...` | 直接 QA |
+| **題目 URL** | `https://www.junyiacademy.org/exercises/...` | 直接 QA（帶 `?qid=<n>` 只驗那一題） |
 | **資料夾 URL** | `https://www.junyiacademy.org/course-compare/...` | Step 0 自動展開為底下的題目 URL |
 
 > 2026-09-19 起主站把 `/exercises/<id>` 轉到新版作答頁 `/new-exercise/<id>`；
@@ -48,17 +48,17 @@ Automated QA testing for Junyi Academy exercises (all subjects) — validates qu
 
 ```
 主 Agent:
-  Step 0:  Pre-flight Check（檢查 agent-browser、url_list.txt、scripts/）
-  Step 1:  Resolve URLs（展開資料夾 URL）
-  Step 2:  讀取待處理 URL
-  Step 3:  並行 spawn Subagent（每個 URL 一個）
-  Step 4:  收集結果 + 驗證嚴謹度
-  Step 5:  產生 QA report
+  Step 0:   Pre-flight Check（檢查 agent-browser、python3、url_list.txt、scripts/）
+  Step 1:   Resolve URLs（展開資料夾 URL）
+  Step 1.5: Fetch Questions（python3 scripts/fetch_questions.py --from-url-list → questions/<id>/）
+  Step 2:   讀取待處理 URL
+  Step 3:   並行 spawn Subagent（每個 URL 一個）
+  Step 4:   收集結果 + 驗證嚴謹度
+  Step 5:   產生 QA report
 
 Subagent（每個 URL）:
-  1. 開啟頁面 + 偵測類型（sequential_quiz / exercise）
-  2A. 依序型：全程 browser 逐題驗證
-  2B. 累積型：Phase 1 browser（passCondition-1 題）+ Phase 2 API 驗證剩餘 qid
+  1. 內容驗證：讀 questions/<id>/all.md，全部題目逐題（獨立判斷 → 比對正解 → 逐步驗解說 → 圖文一致 → 選項逐一判）
+  2. 瀏覽器抽查：種 cookie 開舊版頁 1 題，看渲染、提交正解看平台是否接受（開不了就記 notes 跳過）
   3. 回傳結構化 JSON（含 hintsVerification）
 ```
 
@@ -211,27 +211,29 @@ https://www.junyiacademy.org/exercises/jnc-5-10-1-1b?topic=course-compare/math-e
 
 ## Exercise Modes
 
-平台有兩種題組類型，透過 `window.Exercises.contentType` 自動偵測：
+平台有兩種題組類型，`fetch_questions.py` 依 API 回傳的 `correct_nxt_qid`／`wrong_nxt_qid` 自動判定：
 
-| 類型 | `contentType` | 說明 | QA 策略 |
-|------|--------------|------|---------|
-| 依序型 | `sequential_quiz` | 固定 N 題，全部做完 | 全程 browser 逐題驗證 |
-| 累積型 | `exercise` | 從題目池隨機出題 | Phase 1: browser 做 passCondition-1 題 → Phase 2: API 驗證剩餘 qid |
+| 類型 | mode | 說明 | QA 策略 |
+|------|------|------|---------|
+| 依序型 | `sequential_quiz` | 固定 N 題，依答對／答錯分支 | 全部題目從題目檔驗內容；額外檢查分支 qid 存在 |
+| 累積型 | `exercise` | 從題目池隨機出題 | 全部題目從題目檔驗內容；瀏覽器只抽查 1 題 |
 
-### API 偵察
+### 題目資料來源
 
-透過 `/api/v2/perseus/<exercise-id>/get_question` 取得完整題目池（含所有 qid）。
+`scripts/fetch_questions.py` 打 `/api/v2/perseus/<exercise-id>/get_question` 取得完整題目池
+（題幹、widget 含正解、hints、圖片 URL），寫成 `questions/<exercise-id>/{index.json,all.md,q-<qid>.md}`。
+公開題不需登入；有 `.env` 帳密會先登入拿 KAID，隱藏題才拿得到。API 形狀不符預期時腳本 exit 2 並印 `✗ SCHEMA`，主 agent 必須停下回報。
 
-> API 呼叫必須透過 browser eval 執行（需要 session cookie），不可用 curl。
-> API 的答案不可直接使用提交，答案必須由 agent 獨立計算。
+> 2026-09-19 起 `/exercises/` 轉新版作答頁，舊版 DOM 隨時會消失；內容 QA 因此改以 API 為主、瀏覽器為輔。
+> 題目檔已標平台正解（✓），agent 必須先蓋住正解獨立判斷再比對。
 
 ## Verification
 
 每題透過**三方一致性**驗證：
 
-1. **Independent calculation** — agent 獨立計算答案
-2. **Platform answer** — 提交後確認平台接受
-3. **Hint verification** — 展開每步 hint，逐步重新計算驗證
+1. **Independent judgement** — agent 蓋住題目檔的正解，獨立判斷答案（數學重算、語文依文法語意、知識題核對事實）
+2. **Platform answer** — 與題目檔標的正解比對；瀏覽器抽查那一題另提交一次確認平台接受
+3. **Hint verification** — 逐步驗每一步解說
 
 ### 嚴格驗證（hintsVerification）
 

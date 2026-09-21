@@ -14,13 +14,15 @@
 對以下 URL 進行完整 QA 驗證，檢查題幹、選項、答案與解題說明（hints）是否有內容錯誤。**科目不是跳過的理由**：英文、國文、自然、社會題一律照驗，準則見下方「科目判定與驗證準則」。
 
 - **URL**: {url}
+- **題目檔目錄**: {questions_dir}
 - **Browser Session**: {session}
 
 所有 agent-browser 指令必須加 `--session {session}`。
 
 ## 工具
 
-- **JS 工具檔**：在 `scripts/` 目錄下，直接用 `cat scripts/xxx.js` 讀取
+- **題目檔**：`{questions_dir}/index.json`、`all.md`、`q-<qid>.md`（主 agent 已用 `scripts/fetch_questions.py` 落地；內容驗證只讀這些）
+- **JS 工具檔**（只在 Step 2 瀏覽器抽查用）：在 `scripts/` 目錄下，直接用 `cat scripts/xxx.js` 讀取
   - `probe_page.js` — 偵測頁面結構與題組類型
   - `api_recon.js` — API 取得題目池清單
   - `extract_qid.js` — 取得當前題目 qid
@@ -41,48 +43,73 @@
 
 ## 流程
 
-### Step 1: 開啟頁面並偵測類型
+### 題目資料從哪來
+
+主 agent 已先跑 `python3 scripts/fetch_questions.py`，把這個習題的整個題目池從
+`/api/v2/perseus/<exerciseId>/get_question` 落地在 `{questions_dir}/`：
+
+- `index.json`：mode（exercise／sequential_quiz）、每題 qid、widget 類型、`needs_browser`、warnings、`target_qids`
+- `all.md`：所有要驗的題目（有目標 qid 時只含那幾題）。題幹裡的 widget 佔位符已展開成選項清單並以 ✓ 標平台正解，解說逐步列出，圖片給 URL，答案規格 raw JSON 附在每題末尾
+- `q-<qid>.md`：單題版
+
+內容 QA 需要的東西（題幹、選項、正解、解說）全在檔案裡，**與作答頁 UI 版本無關**。
+瀏覽器只用來抽查渲染與提交，不再是內容驗證的來源。
+
+### Step 1: 內容驗證（主路徑，全部題目，不開瀏覽器）
+
+1. Read `{questions_dir}/index.json`，記下 mode、total、target_qids、warnings。
+   - `missing_target_qids` 非空 → 該 URL 標 `SKIPPED (目標 qid 不在題目池)`，結束。
+   - warnings 含 `unknown_widget_types` → 該題照驗題幹與解說，作答面 notes 記 `unknown widget: <type>`。
+2. Read `{questions_dir}/all.md`。題目池超過 15 題時改逐題 Read `q-<qid>.md`，避免一次吃太多。
+3. 逐題依下方「驗證規則」與「科目判定與驗證準則」驗：**先蓋住 ✓ 自己獨立判斷答案**，再與平台正解比對；每一步解說逐步驗；選擇題每個選項都要獨立判對錯。
+4. 圖片：`curl -sL -o /tmp/{session}-<qid>-<n>.png "<url>"` 下載後用 Read 判讀，做圖文一致性（S3 公開，不需認證）。
+5. expression（填充數學式）題：用答案規格 raw 裡的 `buttonSets` 做符號可輸入性判斷（見下方）。
+6. 每題記 `phase: "api"`。
+
+依序型（mode=sequential_quiz）同樣在這一步驗完：all.md 已照 is_start → correct_nxt_qid 主線排序。
+額外檢查：每題的 correct_nxt_qid／wrong_nxt_qid 是否都存在於池內（index.json 的 qid 清單）、答錯分支是否指向合理的補救題。
+
+### Step 2: 瀏覽器抽查（渲染與提交，只抽 1 題）
+
+目的只有兩件事：頁面渲染有沒有壞（亂碼、LaTeX 沒排出來、圖片破圖），以及平台是否接受你在 Step 1 判定的正解。
+內容對錯已在 Step 1 定案，這一步**不重驗內容**，累積型也**只做一題**，不要做到 passCondition。
+
+抽哪一題：有 target_qids 就抽目標題；否則優先 index.json 裡 `needs_browser: true` 的題
+（互動座標圖、量尺、拖曳圖、iframe——這些的作答面只有開頁看得到）；都沒有就抽第一題。
 
 > **2026-09-19 起主站把 `/exercises/<id>` 307 轉到新版作答頁 `/new-exercise/<id>`**
-> （release rc-2026-09-19）。本工具的 `scripts/` 全押舊版 DOM，新版頁上
-> `probe_page.js` 會回 `exerciseMode: "unknown"`、`identify_qtype.js` 回
-> `no workarea found`。主站保留 cookie `content_ux_version_v2=old` 切回舊版
-> （與頁面右上「切換舊版作答頁」按鈕同一機制，30 天有效）——**每個 session
-> 開第一個頁面後先種 cookie、再重開 URL**：
+> （release rc-2026-09-19）。本工具的 `scripts/` 全押舊版 DOM。主站保留 cookie
+> `content_ux_version_v2=old` 切回舊版（與頁面「切換舊版作答頁」按鈕同一機制，30 天有效）
+> ——開第一個頁面後先種 cookie、再重開 URL：
 
 ```bash
 bin/agent-browser --session {session} open "{url}"
 bin/agent-browser --session {session} wait 3000
-# 同源之下種 cookie（document.cookie 只能在 junyiacademy.org 頁面上設）
 bin/agent-browser --session {session} eval "document.cookie='content_ux_version_v2=old; max-age=2592000; path=/; SameSite=Lax'"
 bin/agent-browser --session {session} open "{url}"
 bin/agent-browser --session {session} wait 3000
 bin/agent-browser --session {session} eval "$(cat scripts/mute_audio.js)"
-# 確認真的落在舊版：pathname 應為 /exercise/<id>（單數，帶 ?redirect_count=1），不是 /new-exercise/
 bin/agent-browser --session {session} eval "location.pathname"
 ```
 
-若 `location.pathname` 仍以 `/new-exercise/` 開頭，代表舊版入口已關閉或 cookie
-沒生效——標記 `SKIPPED (新版作答頁，舊版入口不可用)` 並結束，**不要**在新版
-DOM 上硬跑腳本再自行推論題型。
+- pathname 仍以 `/new-exercise/` 開頭 → 舊版入口已不可用。**不做抽查**，每題 notes 記
+  `browser_spotcheck: unavailable (new UI)`，status 依 Step 1 結果決定（見狀態判定）。不要在新版 DOM 上硬跑腳本。
+- 頁面要登入（`check_login.js` 回 needsLogin: true）→ 照下方登入流程；登入失敗 → notes 記 `browser_spotcheck: login failed`，同樣不影響 status。
+- 開到舊版頁 → `probe_page.js` 確認 exerciseMode；截圖一張（`screenshot`）看渲染；抽查題若不是第一題，用 reload／dot navigation 跳到它（或直接抽當前顯示的那一題，notes 記實際抽到的 qid）；
+  依「identify-question-type」→ 對應 `qa-*-question` skill 填入 Step 1 判定的正解，提交一次，`check_result.js` 看平台是否判對。
+- 抽查發現渲染問題（亂碼、破圖、LaTeX 未渲染、選項顯示不全）→ 記 error `location: "Render"`；學生仍看得懂題目 → status 至少 Warn；看不到題幹或選項 → Fail。
+- 平台不接受 Step 1 判定的正解 → 記 error（正解設定與題意不符，或渲染／輸入問題），Fail，notes 寫清楚平台回了什麼。
 
-#### Step 1a: 登入檢查（若頁面需要登入）
-
-```bash
-bin/agent-browser --session {session} eval "$(cat scripts/check_login.js)"
-```
-
-若 `needsLogin: true`：
+#### 登入流程（頁面需要登入時）
 
 1. 用 Read 工具讀取 `.env`，取得 `JUNYI_EMAIL` 與 `JUNYI_PASSWORD`
-   - 若 `.env` 不存在或帳密為空，標記此 URL 為 `SKIPPED (requires login — no .env)`，直接結束
+   - 若 `.env` 不存在或帳密為空 → notes 記 `browser_spotcheck: requires login, no .env`，跳過抽查
 
-2. 執行登入流程：
+2. 執行登入：
 
 ```bash
 bin/agent-browser --session {session} open "https://www.junyiacademy.org/login"
 bin/agent-browser --session {session} wait 3000
-# 填入 email（從 .env 讀取的值）。
 # 注意（2026-08-17 實測）：登入頁的帳號欄是「無 name 的 input[type=text]」、
 # 送出鈕是 type=button 的「馬上登入」——input[name='email'] 與
 # button[type='submit'] 都選不到任何元素，登入會靜默失敗。
@@ -92,85 +119,13 @@ bin/agent-browser --session {session} find text "馬上登入" click
 bin/agent-browser --session {session} wait 5000
 ```
 
-3. 再次執行 `check_login.js` 確認登入成功（`needsLogin: false`）
-   - 若仍需登入，標記 `SKIPPED (login failed)` 並結束
-
-4. 重新開啟原始 URL（cookie 在同一 session 內仍在，不用重種；仍要複查 pathname）：
-
-```bash
-bin/agent-browser --session {session} open "{url}"
-bin/agent-browser --session {session} wait 3000
-bin/agent-browser --session {session} eval "$(cat scripts/mute_audio.js)"
-bin/agent-browser --session {session} eval "location.pathname"
-```
+3. 再次執行 `check_login.js` 確認登入成功，然後重開原始 URL（cookie 在同一 session 內仍在）並複查 `location.pathname`。
 
 > **注意**：`JUNYI_EMAIL` 與 `JUNYI_PASSWORD` 僅用於填入 agent-browser 指令，**不得在任何輸出、log 或回傳 JSON 中顯示密碼明文**。
 
-#### Step 1b: 偵測題組類型
+### Step 3: 回傳
 
-```bash
-bin/agent-browser --session {session} eval "$(cat scripts/probe_page.js)"
-bin/agent-browser --session {session} eval "$(cat scripts/api_recon.js)"
-```
-
-根據 `exerciseMode` 決定策略：
-- `sequential_quiz` → Step 2A（依序型）
-- `exercise` → Step 2B（累積型）
-
-### Step 2A: 依序型（sequential_quiz）— 全程 browser
-
-逐題執行以下流程，直到所有題目完成。每個 step 的詳細操作請讀取對應的 skill 檔案。
-
-1. **擷取題幹並驗證**：讀取 `.claude/skills/extract-and-verify-stem/SKILL.md` 並執行
-2. **辨識題型**：讀取 `.claude/skills/identify-question-type/SKILL.md` 並執行
-3. **依題型分派**：根據辨識結果，讀取並執行對應 skill：
-
-   | 元素類型 | Skill |
-   |---------|-------|
-   | radio / checkbox | `.claude/skills/qa-choice-question/SKILL.md` |
-   | select | `.claude/skills/qa-dropdown-question/SKILL.md` |
-   | mathquill / text-input | `.claude/skills/qa-fill-question/SKILL.md` |
-   | drag-sort | `.claude/skills/qa-drag-question/SKILL.md` |
-
-4. **統一提交**：click "#check-answer-button" + wait 2000 + press Escape + wait 500
-5. **檢查結果**：eval "$(cat scripts/check_result.js)"
-6. **展開並驗證 hints**：重複 click "#hint"，eval "$(cat scripts/extract_hints.js)"，逐步驗證（依科目準則）
-7. **下一題**：find text "下一題" click + wait 2000
-
-> **混合題型**：同一題包含多種元素時，先計算所有答案，依序填入但不提交，全部填完後統一提交一次。詳見 CLAUDE.md Step 5b。
->
-> **跳題機制**：遇到不支援的題型時，該題標記 SKIPPED，優先用 hints 取得答案提交，備用方案為 reload 跳題。詳見 CLAUDE.md Step 5c。
-
-#### 答錯復原（不可放棄 browser）
-
-1. 展開 hints 確認正確答案
-2. reload 跳到下一題
-3. 若 reload 無效，用 dot navigation（點擊未作答的圓點）
-4. 繼續正常流程
-
-### Step 2B: 累積型（exercise）— 兩階段
-
-**Phase 1：Browser 驗證（前 passCondition - 1 題）**
-
-1. 從 Step 1 的 probe 結果取得 `passCondition`（通常為 5）
-2. 用 browser 正常做題（與 Step 2A 相同流程），**答對 passCondition - 1 題**
-   - 例如 passCondition=5 時，必須用 browser 完整做完 4 題（擷取題幹→獨立計算→填答→提交→展開 hints→驗證）
-   - 每題記錄 qid，追蹤已覆蓋的題目
-3. 第 passCondition 題（第 5 題）使用 hint-first（先 click "#hint" 再填答提交），避免觸發通過
-4. Phase 1 結束時，應有 passCondition 個 qid 已覆蓋（含 hint-first 那題）
-
-**Phase 2：API 驗證（剩餘 qid）**
-
-> **重要**：API 呼叫必須透過 browser eval（`agent-browser eval`）執行，不可用 curl 或其他方式直接打 API。
-> 平台 API 會驗證 origin 和 cookie，只有透過已開啟頁面的 browser session 才能成功。
-
-1. 透過 browser eval 取得所有題目資料：`eval "$(cat scripts/api_recon.js)"`（Step 1 已執行過，可直接使用結果）
-2. 若需取得完整題目內容（題幹、hints），用 browser eval 呼叫 fetch API
-3. 比對 Phase 1 已覆蓋的 qid，對未覆蓋的逐題：
-   - 若有圖片：下載 S3 圖片（curl 可用，S3 不需認證），用 Read 讀取判讀
-   - 獨立判斷答案（不可使用 API 的答案）
-   - 驗證 hints 內容正確性
-4. 在回傳結果中標註 phase: "api"
+依下方「回傳格式」回 JSON。`apiCount` = Step 1 驗過的題數，`browserCount` = Step 2 實際抽查的題數（0 或 1）。
 
 ## 驗證規則
 
@@ -232,11 +187,11 @@ bin/agent-browser --session {session} eval "$(cat scripts/api_recon.js)"
 
 ### 填空符號可輸入性驗證（MathQuill 填空題必做）
 
-若填空題的正確答案含特殊符號（√、π 等），**必須透過 `api_recon.js` 已取得的題目 JSON 檢查 `buttonSets` 欄位**，而非依賴 runtime 的 `check_mq_config.js`。
+若填空題的正確答案含特殊符號（√、π 等），**必須用題目檔（`q-<qid>.md` 末尾「答案規格 raw」）裡 expression widget 的 `buttonSets` 欄位判斷**，而非依賴 runtime 的 `check_mq_config.js`。
 
 > **為何改用 API 資料**：`check_mq_config.js` 讀取的是 MathQuill runtime 實例設定，可能與後台建題設定不一致，導致誤報。`buttonSets` 才是建題者設定的 source of truth。
 
-**判斷方式**：從 `api_recon.js` 結果中找到對應 expression widget，讀取其 `buttonSets` 陣列：
+**判斷方式**：從題目檔的答案規格 raw 找到對應 expression widget，讀取其 `buttonSets` 陣列：
 
 | 答案含此符號 | 需確認 buttonSets 包含 |
 |-------------|----------------------|
@@ -246,8 +201,8 @@ bin/agent-browser --session {session} eval "$(cat scripts/api_recon.js)"
 | 三角函數 sin cos tan | `"trig"` |
 
 **判斷流程**：
-1. 答案含特殊符號 → 從 api_recon 結果取對應 widget 的 `buttonSets`
-2. **包含對應 buttonSet** → 符號可輸入，直接進行 `set_mq.js` 填答，**不報錯**
+1. 答案含特殊符號 → 從題目檔取對應 widget 的 `buttonSets`
+2. **包含對應 buttonSet** → 符號可輸入，**不報錯**（Step 2 若抽到這題，再用 `set_mq.js` 填答）
 3. **不包含對應 buttonSet** → 標記 error：
 
 ```
@@ -257,7 +212,7 @@ correctValue: "後台應在 expression widget 設定中將 buttonSets 加入 pre
 suggestion: "建題時勾選 prealgebra 選項以啟用根號輸入按鈕"
 ```
 
-仍繼續用 `set_mq.js` 提交並驗證 hints，在 notes 加入 `input_symbol_unavailable: sqrt`。
+內容其餘部分照驗，在 notes 加入 `input_symbol_unavailable: sqrt`。
 
 **不可接受的做法**：
 - ❌ 用 `check_mq_config.js` 的 runtime 結果判斷符號是否可輸入（易誤報）
@@ -302,7 +257,7 @@ Hint 1/3: cosB = (5²+10²-17²)/(2×5×10) = (5+10-17)/100 = -2/100
 **不可接受的驗證方式**：
 - ❌ 只看最後一步答案和自己算的一樣就全部 PASS
 - ❌ 「看起來合理」就跳過中間步驟
-- ❌ Phase 2 API 驗證時只核對答案數值不看 hint 步驟
+- ❌ 只核對答案數值不看 hint 步驟
 - ❌ 選擇題只驗證平台標記的正確答案，不驗證其他選項
 - ❌ 有圖片的題目不比對圖中數值與計算過程
 
@@ -339,7 +294,7 @@ Hint 1/3: cosB = (5²+10²-17²)/(2×5×10) = (5+10-17)/100 = -2/100
           "match": <true/false>
         }
       ],
-      "phase": "<browser 或 api>",
+      "phase": "<api（Step 1 內容驗證）或 browser（Step 2 有抽到這題）>",
       "errors": [],
       "notes": ""
     }
@@ -353,8 +308,9 @@ Hint 1/3: cosB = (5²+10²-17²)/(2×5×10) = (5+10-17)/100 = -2/100
 ## 狀態判定
 
 - 所有題目 hintsValid=true 且無 errors → status: "Pass"
-- 任一題有 errors → status: "Fail"
-- 內容正確但 browser 操作困難用了 API 備援 → status: "Warn"，notes 標註困難
+- 任一題有 errors（內容錯誤、或抽查發現平台不接受正解／嚴重渲染問題）→ status: "Fail"
+- 內容全部正確、Step 2 抽查發現輕微渲染問題（學生仍看得懂）→ status: "Warn"，errors 記 location "Render"
+- 內容全部正確、Step 2 抽查做不了（新版 UI、要登入而無帳密、頁面開不起來）→ **status: "Pass"**，每題 notes 記 `browser_spotcheck: unavailable (<原因>)`。內容 QA 是主目的，抽查缺席不降級
 - **不得**因科目非數學、或題目是英文而回 SKIPPED；DOM 為 radio／checkbox／select／input／drag-sort 之一就照對應 skill 驗
 
 ## 收尾（必須執行）
