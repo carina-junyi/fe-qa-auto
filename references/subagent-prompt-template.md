@@ -1,6 +1,6 @@
 # QA Subagent Prompt Template
 
-主 Agent spawn subagent 時使用此模板。將 `{url}`、`{session}` 替換為實際值。
+主 Agent spawn subagent 時使用此模板。將 `{url}`（目標原文：題目 URL，或無 URL 目標 `qid:<n>`／`cr:<cover_range>`）、`{questions_dir}`、`{session}` 替換為實際值。
 
 ---
 
@@ -11,9 +11,9 @@
 
 ## 任務
 
-對以下 URL 進行完整 QA 驗證，檢查題幹、選項、答案與解題說明（hints）是否有內容錯誤。**科目不是跳過的理由**：英文、國文、自然、社會題一律照驗，準則見下方「科目判定與驗證準則」。
+對以下目標進行完整 QA 驗證，檢查題幹、選項、答案與解題說明（hints）是否有內容錯誤。**科目不是跳過的理由**：英文、國文、自然、社會題一律照驗，準則見下方「科目判定與驗證準則」。
 
-- **URL**: {url}
+- **目標**: {url}（題目 URL；或無 URL 的 `qid:<n>`／`cr:<cover_range>` ＝ 上架前 QA，資料來自後台，可能含未上架題）
 - **題目檔目錄**: {questions_dir}
 - **Browser Session**: {session}
 
@@ -45,10 +45,11 @@
 
 ### 題目資料從哪來
 
-主 agent 已先跑 `python3 scripts/fetch_questions.py`，把這個習題的整個題目池從
-`/api/v2/perseus/<exerciseId>/get_question` 落地在 `{questions_dir}/`：
+主 agent 已先跑 `python3 scripts/fetch_questions.py`，把這個目標的整個題目池落地在 `{questions_dir}/`
+（題目 URL：來自 `/api/v2/perseus/<exerciseId>/get_question`；`qid:`／`cr:` 目標：來自預先落地的
+`raw.json`，即後台 Datastore 的當下內容，`all.md` 標頭會寫明來源）：
 
-- `index.json`：mode（exercise／sequential_quiz）、每題 qid、widget 類型、`needs_browser`、warnings、`target_qids`
+- `index.json`：mode（exercise／sequential_quiz）、每題 qid、widget 類型、`needs_browser`、warnings、`target_qids`、`hidden_count`／每題 `is_hidden`（只有 raw 來源有）
 - `all.md`：所有要驗的題目（有目標 qid 時只含那幾題）。題幹裡的 widget 佔位符已展開成選項清單並以 ✓ 標平台正解，解說逐步列出，圖片給 URL，答案規格 raw JSON 附在每題末尾
 - `q-<qid>.md`：單題版
 
@@ -57,22 +58,32 @@
 
 ### Step 1: 內容驗證（主路徑，全部題目，不開瀏覽器）
 
-1. Read `{questions_dir}/index.json`，記下 mode、total、target_qids、warnings。
-   - `missing_target_qids` 非空 → 該 URL 標 `SKIPPED (目標 qid 不在題目池)`，結束。
+1. Read `{questions_dir}/index.json`，記下 mode、total、target_qids、warnings、source（api／raw）。
+   - `missing_target_qids` 非空 → 該目標標 `SKIPPED (目標 qid 不在題目池)`，結束。
+   - `source: "raw"` 且 `raw.truncated: true` → 題目池被落地方截斷，照驗拿到的題，summary 註明「非完整池」。
    - warnings 含 `unknown_widget_types` → 該題照驗題幹與解說，作答面 notes 記 `unknown widget: <type>`。
 2. Read `{questions_dir}/all.md`。題目池超過 15 題時改逐題 Read `q-<qid>.md`，避免一次吃太多。
 3. 逐題依下方「驗證規則」與「科目判定與驗證準則」驗：**先蓋住 ✓ 自己獨立判斷答案**，再與平台正解比對；每一步解說逐步驗；選擇題每個選項都要獨立判對錯。
 4. 圖片：`curl -sL -o /tmp/{session}-<qid>-<n>.png "<url>"` 下載後用 Read 判讀，做圖文一致性（S3 公開，不需認證）。
 5. expression（填充數學式）題：用答案規格 raw 裡的 `buttonSets` 做符號可輸入性判斷（見下方）。
-6. 每題記 `phase: "api"`。
+6. 每題記 `phase: "api"`；`is_hidden: true` 的題 notes 加 `unpublished`（未上架＝內容組還在編，錯誤照報但語氣是「上架前抓到」）。
 
-依序型（mode=sequential_quiz）同樣在這一步驗完：all.md 已照 is_start → correct_nxt_qid 主線排序。
-額外檢查：每題的 correct_nxt_qid／wrong_nxt_qid 是否都存在於池內（index.json 的 qid 清單）、答錯分支是否指向合理的補救題。
+依序型（mode=sequential_quiz，講義題組）同樣在這一步驗完：all.md 已照 is_start → correct_nxt_qid 主線排序。
+**題組流程設定**由 `fetch_questions.py` 決定性檢查過，結果在 `index.json` 的 `sequence` 與 all.md 標頭
+「題組流程檢查」行：起點唯一、答對分支走得到 end、無迴圈、答對不指向自己、所有分支都指向池內、每題答對都能結束。
+- `sequence.errors` 非空 → 該目標 **Fail**，每條 error 原樣記成一筆 `location: "Sequence"`（qid 填 error 提到的題），
+  這就是「題組在答題時最後一題一直無法結束」那類設定錯誤，不需要開瀏覽器走一遍。
+- `sequence.warnings`（走不到的題、答錯回頭路）記進對應題的 notes，不降級。
+- 你自己再看一眼答錯分支指向的補救題內容是否合理（例如答錯高階題卻跳到不相關的題）。
 
 ### Step 2: 瀏覽器抽查（渲染與提交，只抽 1 題）
 
 目的只有兩件事：頁面渲染有沒有壞（亂碼、LaTeX 沒排出來、圖片破圖），以及平台是否接受你在 Step 1 判定的正解。
 內容對錯已在 Step 1 定案，這一步**不重驗內容**，累積型也**只做一題**，不要做到 passCondition。
+
+**先判要不要做**：目標不是 URL（`qid:`／`cr:`），或要抽的那題 `is_hidden: true` → **整段跳過**，
+每題 notes 記 `browser_spotcheck: unavailable (no URL / unpublished)`，直接到 Step 3。上架前的題沒有作答頁，
+硬開只會浪費時間；status 一律由 Step 1 決定（見狀態判定）。
 
 抽哪一題：有 target_qids 就抽目標題；否則優先 index.json 裡 `needs_browser: true` 的題
 （互動座標圖、量尺、拖曳圖、iframe——這些的作答面只有開頁看得到）；都沒有就抽第一題。
@@ -267,7 +278,7 @@ Hint 1/3: cosB = (5²+10²-17²)/(2×5×10) = (5+10-17)/100 = -2/100
 
 {
   "url": "{url}",
-  "exerciseId": "<從 probe 取得>",
+  "exerciseId": "<index.json 的 exercise_id；無 URL 目標就是 qid-<n>／cr-<x>>",
   "exerciseMode": "<sequential_quiz 或 exercise>",
   "status": "<Pass 或 Fail 或 Warn>",
   "duration": "<mm:ss>",
@@ -310,7 +321,7 @@ Hint 1/3: cosB = (5²+10²-17²)/(2×5×10) = (5+10-17)/100 = -2/100
 - 所有題目 hintsValid=true 且無 errors → status: "Pass"
 - 任一題有 errors（內容錯誤、或抽查發現平台不接受正解／嚴重渲染問題）→ status: "Fail"
 - 內容全部正確、Step 2 抽查發現輕微渲染問題（學生仍看得懂）→ status: "Warn"，errors 記 location "Render"
-- 內容全部正確、Step 2 抽查做不了（新版 UI、要登入而無帳密、頁面開不起來）→ **status: "Pass"**，每題 notes 記 `browser_spotcheck: unavailable (<原因>)`。內容 QA 是主目的，抽查缺席不降級
+- 內容全部正確、Step 2 抽查做不了（新版 UI、要登入而無帳密、頁面開不起來、無 URL 目標、未上架題）→ **status: "Pass"**，每題 notes 記 `browser_spotcheck: unavailable (<原因>)`。內容 QA 是主目的，抽查缺席不降級
 - **不得**因科目非數學、或題目是英文而回 SKIPPED；DOM 為 radio／checkbox／select／input／drag-sort 之一就照對應 skill 驗
 
 ## 收尾（必須執行）
