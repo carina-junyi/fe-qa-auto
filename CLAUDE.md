@@ -12,7 +12,7 @@
 
   | URL 類型 | 特徵 | 處理方式 |
   |----------|------|----------|
-  | **題目 URL** | 含 `/exercises/` | 直接進入 QA 流程 |
+  | **題目 URL** | 含 `/exercises/` | 直接進入 QA 流程；帶 `?qid=<n>` 時只驗那一題 |
   | **資料夾 URL** | 不含 `/exercises/`（如 `/course-compare/...`） | Step 1 自動展開為底下的題目 URL |
 
   > 2026-09-19 起 `/exercises/<id>` 在主站會 307 到新版作答頁 `/new-exercise/<id>`，
@@ -56,7 +56,8 @@
 | 2 | `urls/url_list.txt` 是否存在 | 檢查檔案是否存在 | 請先建立：`cp urls/url_list.txt.example urls/url_list.txt` 並填入要 QA 的 URL |
 | 3 | `url_list.txt` 中是否有 ToDo 的 URL | 讀取檔案，篩選 ToDo 或無狀態的行 | 沒有待處理的 URL，請在 url_list.txt 中加入 URL（狀態設為 ToDo 或留空） |
 | 4 | `scripts/` 目錄的 JS 檔案是否完整 | 檢查是否有 18 個 .js 檔案 | 缺少 JS 工具檔，請確認 scripts/ 目錄完整（應有 18 個 .js 檔案） |
-| 5 | `.env` 是否存在（選填） | 檢查 `.env` 檔案是否存在 | 若 URL 需要登入，請建立：`cp .env.example .env` 並填入帳密。無 `.env` 時需登入的 URL 會標記 SKIPPED |
+| 5 | `.env` 是否存在（選填） | 檢查 `.env` 檔案是否存在 | 若 URL 需要登入，請建立：`cp .env.example .env` 並填入帳密。無 `.env` 時隱藏題拿不到、需登入頁面的瀏覽器抽查會跳過 |
+| 6 | `python3` 可用 | `python3 --version` | `scripts/resolve_urls.py` 與 `scripts/fetch_questions.py` 需要 Python 3.9+ |
 
 全部通過後才進入 Step 1。
 
@@ -72,20 +73,42 @@
 
 ---
 
+### Step 1.5: Fetch Questions（把題目池落地成檔案）
+
+```bash
+python3 scripts/fetch_questions.py --from-url-list
+```
+
+對 `url_list.txt` 裡每個 `ToDo` 題目 URL 打 `/api/v2/perseus/<exerciseId>/get_question`，
+把整個題目池寫到 `questions/<exerciseId>/`（`index.json`、`all.md`、`q-<qid>.md`）。
+URL 帶 `?qid=<n>` 時只驗那一題（`all.md` 只含目標題）。有 `.env` 帳密會先登入拿 KAID，隱藏題才拿得到。
+
+輸出每行一個習題：`✓ <id>：<mode>，N 題，M 題含需開頁的 widget`。
+- `✗ SCHEMA ...`（exit 2）：API 回傳形狀不符合預期——**停下來回報使用者**，該 URL 標
+  `SKIPPED (API schema drift)`，不要自己猜著繼續。這是刻意設計：形狀漂移要看得到。
+- `✗ FETCH ...`：網路／端點錯誤，重跑一次；仍失敗標 `SKIPPED (fetch failed)`。
+
+> 為什麼走 API：2026-09-19 起 `/exercises/` 轉新版作答頁，舊版 DOM 隨時會消失；內容 QA 要的
+> 題幹、選項、正解、解說全在這支 API（主站「列印練習卷」的資料來源）。Perseus 是 client-side
+> 批改，widget 自帶正解，公開題不需登入。
+
 ### Step 2: 讀取待處理 URL
 
 讀取 `urls/url_list.txt`，篩選出所有 `ToDo`（或無狀態）的 URL。
 
 ### Step 3: 對每個 URL spawn Subagent
 
-讀取 `references/subagent-prompt-template.md` 中的 prompt 模板，將 `{url}` 和 `{session}` 替換為實際值後，spawn subagent。
+讀取 `references/subagent-prompt-template.md` 中的 prompt 模板，將 `{url}`、`{questions_dir}`
+（= `questions/<exerciseId>`）和 `{session}` 替換為實際值後，spawn subagent。
 
 每個 URL 使用獨立的 agent-browser session（如 `qa-1`、`qa-2`...），避免 browser 衝突。
 
 ```
 for i, url in enumerate(todo_urls):
     session = f"qa-{i+1}"
-    prompt = template.replace("{url}", url).replace("{session}", session)
+    qdir = f"questions/{exercise_id_of(url)}"
+    prompt = (template.replace("{url}", url).replace("{session}", session)
+                      .replace("{questions_dir}", qdir))
     spawn subagent(prompt, session)
 ```
 
@@ -162,23 +185,20 @@ Footer:
 
 Subagent 的詳細執行流程定義在 `references/subagent-prompt-template.md`，包含：
 
-- 偵測題組類型（sequential_quiz / exercise）
-- 依序型：全程 browser 逐題驗證
-- 累積型：Phase 1 browser + Phase 2 API
-- 每題：擷取題幹 → 獨立計算 → 填答 → 提交 → 展開 hints → 驗證
-- 答錯復原流程
+- **Step 1 內容驗證**（主路徑）：讀 `questions/<exerciseId>/all.md`，全部題目逐題：蓋住正解獨立判斷 → 比對 → 逐步驗解說 → 圖文一致 → 選項逐一判對錯。不開瀏覽器。
+- **Step 2 瀏覽器抽查**（1 題）：種 cookie 開舊版頁，看渲染、提交 Step 1 判定的正解看平台是否接受。舊版入口不可用就記 notes 跳過，不影響 status。
+- 依序型（sequential_quiz）與累積型（exercise）都走同一條路；依序型多檢查分支 qid 是否存在。
 - 結構化 JSON 回傳
 
 ### 關鍵規則（Subagent 必須遵守）
 
 - **嚴格模式**：每一題都必須展開所有 hints，逐步驗證內容正確性（數學題逐步驗算；語文／知識題逐句核對說明與答案、選項是否一致）
-- **依序型全程 browser**：不得跳過 browser 改用 API
-- **獨立計算**：不可使用 API 的答案提交，答案必須獨立計算
-- **答錯不放棄**：展開 hints → reload → dot navigation → 繼續
+- **先蓋住正解再判**：題目檔已標平台正解（✓），必須先獨立判斷再比對，不可反過來替平台答案找理由
+- **瀏覲器只抽查不驗內容**：Step 2 只做一題、只看渲染與提交；累積型不做到 passCondition
 - **圖文一致性**：圖片中的數值（角度、邊長等）必須與題幹及計算過程交叉比對，不一致即為 error
 - **選項完整驗證**：選擇題必須獨立驗證每一個選項的正確性，不可只驗證平台標記的答案
 - **題幹用語一致性**：檢查題幹前後的命名、符號是否一致（如不可前半用甲乙丙、後半用 ABC）
-- **填空符號可輸入性**：填空題答案含根號（√）、π 等特殊符號時，從 `api_recon.js` 結果讀取 expression 的 `buttonSets` 欄位判斷（包含 `"prealgebra"` 才算可輸入）；不可用 `check_mq_config.js` runtime 結果判斷（易誤報）；`set_mq.js` 能注入 ≠ 平台設定正確
+- **填空符號可輸入性**：填空題答案含根號（√）、π 等特殊符號時，從題目檔答案規格 raw 讀取 expression 的 `buttonSets` 欄位判斷（包含 `"prealgebra"` 才算可輸入）；不可用 `check_mq_config.js` runtime 結果判斷（易誤報）；`set_mq.js` 能注入 ≠ 平台設定正確
 
 ---
 
@@ -186,9 +206,13 @@ Subagent 的詳細執行流程定義在 `references/subagent-prompt-template.md`
 
 | 情況 | 處理 |
 |------|------|
-| 需要登入 | `SKIPPED (requires login)` |
+| `fetch_questions.py` 回 `✗ SCHEMA` | `SKIPPED (API schema drift)`，**停下來回報使用者** |
+| `fetch_questions.py` 回 `✗ FETCH`（重跑仍失敗） | `SKIPPED (fetch failed)` |
+| 題目池是空的（習題不存在／下架／全隱藏題未登入） | `SKIPPED (empty pool)`，訊息裡註明是否有登入 |
+| `?qid=` 目標不在題目池 | `SKIPPED (目標 qid 不在題目池)` |
+| 瀏覽器抽查需要登入而無 `.env` | 抽查跳過，notes 記 `browser_spotcheck: requires login`；status 不受影響 |
 | 頁面未載入 | `wait --load networkidle` + `wait 3000` 重試 |
 | 元素不在畫面內 | `scrollintoview @eN` 或 `scroll down 300` |
 | `find text` 多重匹配 | 改用 CSS selector |
 | diagnostic-exam 類型 | `SKIPPED (非 exercises 類型)` |
-| 種了 `content_ux_version_v2=old` 仍落在 `/new-exercise/` | `SKIPPED (新版作答頁，舊版入口不可用)`——不要在新版 DOM 上硬跑腳本 |
+| 種了 `content_ux_version_v2=old` 仍落在 `/new-exercise/` | 瀏覽器抽查跳過，notes 記 `browser_spotcheck: unavailable (new UI)`；內容驗證照常，status 不受影響。不要在新版 DOM 上硬跑腳本 |
