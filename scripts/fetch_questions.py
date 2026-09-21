@@ -458,6 +458,107 @@ def render_question_md(item: dict, idx: int, total: int, mode: str) -> str:
     return "\n".join(out) + "\n"
 
 
+END_MARKERS = {"end", "END", None, "", 0}  # 平台以字串 "end" 收尾；None/空值也當終點（保守）
+
+
+def sequence_check(items: list[dict]) -> dict:
+    """依序型（講義題組）的流程設定檢查——決定性，不用開瀏覽器走一遍。
+
+    2026-09-21 Carina 指出：#8 拿掉「依序型全程 browser」後，可能漏測「題組順序設定錯誤，
+    例如最後一題一直無法結束」。這類錯誤全在 is_start／correct_nxt_qid／wrong_nxt_qid 三個欄位，
+    用圖檢查比瀏覽器逐題點「下一題」更完整（瀏覽器只走一條路，這裡每題兩條分支都看）。
+
+    errors（任一即 Fail，location "Sequence"）：
+    - 起點數不是 1（沒有 is_start，或多個）
+    - 沿答對分支從起點走：指向池外 qid、走進迴圈（答對永遠結束不了）、答對指向自己
+    - 任何一題的 correct／wrong 指向池外 qid
+    - 從任一題只答對走下去到不了 end（該題的學生會卡住）
+    warnings（記進 notes，不降級）：
+    - 從起點沿兩條分支都到不了的題（設定了卻永遠出不來）
+    - 答錯指向自己以外的回頭路（多半是刻意補救，提醒人看一眼）
+    """
+    by_qid = {it["qid"]: it for it in items}
+    errors: list[str] = []
+    warnings: list[str] = []
+    starts = [it["qid"] for it in items if it["is_start"]]
+    if len(starts) != 1:
+        errors.append(f"起點（is_start）數量為 {len(starts)}，應為 1：{starts}")
+    start = starts[0] if starts else items[0]["qid"]
+
+    def is_end(v) -> bool:
+        return v in END_MARKERS or (isinstance(v, str) and v.lower() == "end")
+
+    def resolve(v):
+        # 池內 qid 可能以 int 或數字字串存
+        if isinstance(v, str) and v.isdigit():
+            v = int(v)
+        return v
+
+    for it in items:
+        for field in ("correct_nxt_qid", "wrong_nxt_qid"):
+            v = resolve(it[field])
+            if is_end(v) or v in by_qid:
+                continue
+            errors.append(f"qid {it['qid']} 的 {field}={it[field]!r} 不在題目池內")
+        if resolve(it["correct_nxt_qid"]) == it["qid"]:
+            errors.append(f"qid {it['qid']} 答對後指向自己，永遠結束不了")
+
+    # 主線：從起點沿答對分支走到 end
+    path, seen, cur = [], set(), start
+    while True:
+        if is_end(cur):
+            break
+        cur = resolve(cur)
+        if cur not in by_qid:
+            break  # 已在上面記 error
+        if cur in seen:
+            errors.append(f"答對分支形成迴圈：{' → '.join(map(str, path))} → {cur}")
+            break
+        seen.add(cur)
+        path.append(cur)
+        cur = by_qid[cur]["correct_nxt_qid"]
+    reaches_end = is_end(cur)
+
+    # 每題只答對往下走都要能到 end
+    for it in items:
+        hop, visited = it["qid"], set()
+        while not is_end(hop):
+            hop = resolve(hop)
+            if hop not in by_qid or hop in visited:
+                if hop in visited:
+                    errors.append(f"從 qid {it['qid']} 一路答對到不了 end（卡在迴圈）")
+                break
+            visited.add(hop)
+            hop = by_qid[hop]["correct_nxt_qid"]
+
+    # 可達性：從起點沿兩條分支能走到哪些題
+    reach, stack = set(), [start]
+    while stack:
+        q = resolve(stack.pop())
+        if is_end(q) or q not in by_qid or q in reach:
+            continue
+        reach.add(q)
+        stack.extend([by_qid[q]["correct_nxt_qid"], by_qid[q]["wrong_nxt_qid"]])
+    unreachable = sorted(q for q in by_qid if q not in reach)
+    if unreachable:
+        warnings.append(f"從起點走不到的題：{unreachable}")
+    for it in items:
+        w = resolve(it["wrong_nxt_qid"])
+        if w in by_qid and w != it["qid"] and w in path and path.index(w) < (path.index(it["qid"]) if it["qid"] in path else len(path)):
+            warnings.append(f"qid {it['qid']} 答錯回到較前面的 qid {w}（補救路徑？確認是刻意）")
+
+    # 去重、保序
+    errors = list(dict.fromkeys(errors)); warnings = list(dict.fromkeys(warnings))
+    return {
+        "ok": not errors,
+        "start_qid": start if starts else None,
+        "correct_path": path,
+        "reaches_end": reaches_end,
+        "errors": errors,
+        "warnings": warnings,
+    }
+
+
 def write_exercise(exercise_id: str, pool: list[dict], out_dir: str,
                    target_qids: list[int], source_url: str | None,
                    *, target: str | None = None, source: str = "api",
@@ -476,6 +577,7 @@ def write_exercise(exercise_id: str, pool: list[dict], out_dir: str,
             cur = by_qid[cur]["correct_nxt_qid"]
         ordered.extend(it for it in items if it["qid"] not in seen)
         items = ordered
+    sequence = sequence_check(items) if mode == "sequential_quiz" else None
     known_qids = {it["qid"] for it in items}
     missing_targets = [q for q in target_qids if q not in known_qids]
     folder = os.path.join(out_dir, exercise_id)
@@ -498,6 +600,15 @@ def write_exercise(exercise_id: str, pool: list[dict], out_dir: str,
     ]
     if raw_meta and raw_meta.get("truncated"):
         header.append(f"⚠️ 題目池被落地方截斷（成本閘），本檔不是完整池：{raw_meta.get('note') or ''}")
+    if sequence is not None:
+        if sequence["ok"]:
+            header.append(f"題組流程檢查 ✓：起點 {sequence['start_qid']}，沿答對分支 "
+                          f"{' → '.join(map(str, sequence['correct_path']))} → end；所有分支都指向池內、每題答對都走得到 end")
+        else:
+            header.append("**題組流程檢查 ✗（設定錯誤，直接 Fail，location \"Sequence\"）**：")
+            header.extend(f"- {e}" for e in sequence["errors"])
+        if sequence["warnings"]:
+            header.append("題組流程提醒（記 notes，不降級）：" + "；".join(sequence["warnings"]))
     if target_qids:
         header.append(f"**只驗目標題 qid {target_qids}**（其餘 {total - len(md_all)} 題不在本次範圍）")
     with open(os.path.join(folder, "all.md"), "w", encoding="utf-8") as fh:
@@ -509,6 +620,7 @@ def write_exercise(exercise_id: str, pool: list[dict], out_dir: str,
         "raw": raw_meta,
         "source_url": source_url,
         "mode": mode,
+        "sequence": sequence,
         "total": total,
         "hidden_count": hidden_n,
         "target_qids": target_qids,
@@ -634,6 +746,9 @@ def main(argv: list[str]) -> int:
         miss = f"，⚠️ 目標不在池內：{index['missing_target_qids']}" if index["missing_target_qids"] else ""
         warn = f"，warnings：{index['warnings']}" if index["warnings"] else ""
         hid = f"，{index['hidden_count']} 題未上架" if index.get("hidden_count") else ""
+        seq = index.get("sequence")
+        if seq is not None:
+            hid += "，題組流程 ✓" if seq["ok"] else f"，⚠️ 題組流程設定錯誤 {len(seq['errors'])} 項"
         src = "" if kind == "url" else f"（raw：{(index.get('raw') or {}).get('source') or '?'}）"
         print(f"  ✓ {token}：{index['mode']}，{index['total']} 題{hid}，{nb} 題含需開頁的 widget"
               f"{tgt}{miss}{warn}{src} → {folder}/")

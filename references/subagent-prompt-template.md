@@ -68,8 +68,13 @@
 5. expression（填充數學式）題：用答案規格 raw 裡的 `buttonSets` 做符號可輸入性判斷（見下方）。
 6. 每題記 `phase: "api"`；`is_hidden: true` 的題 notes 加 `unpublished`（未上架＝內容組還在編，錯誤照報但語氣是「上架前抓到」）。
 
-依序型（mode=sequential_quiz）同樣在這一步驗完：all.md 已照 is_start → correct_nxt_qid 主線排序。
-額外檢查：每題的 correct_nxt_qid／wrong_nxt_qid 是否都存在於池內（index.json 的 qid 清單）、答錯分支是否指向合理的補救題。
+依序型（mode=sequential_quiz，講義題組）同樣在這一步驗完：all.md 已照 is_start → correct_nxt_qid 主線排序。
+**題組流程設定**由 `fetch_questions.py` 決定性檢查過，結果在 `index.json` 的 `sequence` 與 all.md 標頭
+「題組流程檢查」行：起點唯一、答對分支走得到 end、無迴圈、答對不指向自己、所有分支都指向池內、每題答對都能結束。
+- `sequence.errors` 非空 → 該目標 **Fail**，每條 error 原樣記成一筆 `location: "Sequence"`（qid 填 error 提到的題），
+  這就是「題組在答題時最後一題一直無法結束」那類設定錯誤，不需要開瀏覽器走一遍。
+- `sequence.warnings`（走不到的題、答錯回頭路）記進對應題的 notes，不降級。
+- 你自己再看一眼答錯分支指向的補救題內容是否合理（例如答錯高階題卻跳到不相關的題）。
 
 ### Step 2: 瀏覽器抽查（渲染與提交，只抽 1 題）
 

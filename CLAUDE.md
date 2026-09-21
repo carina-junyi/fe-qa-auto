@@ -91,7 +91,9 @@ python3 scripts/fetch_questions.py --from-url-list
 - `qid:<n>`／`cr:<x>` → 讀**已存在的** `questions/qid-<n>/raw.json`／`questions/cr-<x>/raw.json`，
   不打網路。`index.json` 多 `hidden_count`、每題 `is_hidden`；`all.md` 每題有「上架狀態」行。
 
-輸出每行一個目標：`✓ <目標>：<mode>，N 題[，K 題未上架]，M 題含需開頁的 widget`。
+輸出每行一個目標：`✓ <目標>：<mode>，N 題[，K 題未上架][，題組流程 ✓／⚠️ 題組流程設定錯誤 K 項]，M 題含需開頁的 widget`。
+依序型（講義題組）會順帶做流程設定檢查（起點唯一、答對鏈走得到 `end`、無迴圈、分支都在池內），
+結果寫在 `index.json` 的 `sequence`；有 errors 的目標由 subagent 直接判 Fail（location `Sequence`）。
 - `✗ SCHEMA ...`（exit 2）：API／raw 回傳形狀不符合預期——**停下來回報使用者**，該目標標
   `SKIPPED (schema drift)`，不要自己猜著繼續。這是刻意設計：形狀漂移要看得到。
 - `✗ FETCH ...`：網路／端點錯誤，重跑一次；仍失敗標 `SKIPPED (fetch failed)`。
@@ -227,6 +229,7 @@ Subagent 的詳細執行流程定義在 `references/subagent-prompt-template.md`
 | `fetch_questions.py` 回 `✗ FETCH`（重跑仍失敗） | `SKIPPED (fetch failed)` |
 | `fetch_questions.py` 回 `✗ RAW`（`qid:`／`cr:` 目標沒有 raw.json） | `SKIPPED (raw.json 不存在)`；其餘目標照跑 |
 | 目標是 `qid:`／`cr:`（無 URL），或目標題 `is_hidden: true` | 只做 Step 1 內容驗證，瀏覽器抽查跳過，notes 記 `browser_spotcheck: unavailable (no URL / unpublished)`；status 由內容決定 |
+| 依序型 `index.json` 的 `sequence.errors` 非空（起點不唯一、答對指自己、迴圈、分支指向池外） | 該目標 **Fail**，errors 記 `location: "Sequence"`——這是 `fetch_questions.py` 決定性算出的題組流程設定錯誤，取代舊版「瀏覽器全程走題組」 |
 | 題目池是空的（習題不存在／下架／全隱藏題未登入） | `SKIPPED (empty pool)`，訊息裡註明是否有登入 |
 | `?qid=` 目標不在題目池 | `SKIPPED (目標 qid 不在題目池)` |
 | 瀏覽器抽查需要登入而無 `.env` | 抽查跳過，notes 記 `browser_spotcheck: requires login`；status 不受影響 |
