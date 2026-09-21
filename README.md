@@ -35,10 +35,11 @@ Automated QA testing for Junyi Academy exercises (all subjects) — validates qu
 
 `url_list.txt` 支援兩種 URL 類型：
 
-| URL 類型 | 範例 | 處理方式 |
+| 目標類型 | 範例 | 處理方式 |
 |----------|------|----------|
-| **題目 URL** | `https://www.junyiacademy.org/exercises/...` | 直接 QA（帶 `?qid=<n>` 只驗那一題） |
-| **資料夾 URL** | `https://www.junyiacademy.org/course-compare/...` | Step 0 自動展開為底下的題目 URL |
+| **題目 URL** | `https://www.junyiacademy.org/exercises/...` | 直接 QA（帶 `?qid=<n>` 只驗那一題）；題目池打 `get_question` API |
+| **資料夾 URL** | `https://www.junyiacademy.org/course-compare/...` | Step 1 自動展開為底下的題目 URL |
+| **`qid:<n>`／`cr:<cover_range>`** | `qid:138767`、`cr:s-eng-s-g12-b5-6-b` | **上架前 QA**（無 URL）：題目資料由呼叫方預先落在 `questions/<dir>/raw.json`（Compass 直讀 Datastore；本 repo 不碰憑證），只驗內容、不開瀏覽器 |
 
 > 2026-09-19 起主站把 `/exercises/<id>` 轉到新版作答頁 `/new-exercise/<id>`；
 > QA 腳本只支援舊版 DOM，subagent 會先種 cookie `content_ux_version_v2=old`
@@ -53,7 +54,7 @@ Automated QA testing for Junyi Academy exercises (all subjects) — validates qu
   Step 1.5: Fetch Questions（python3 scripts/fetch_questions.py --from-url-list → questions/<id>/）
   Step 2:   讀取待處理 URL
   Step 3:   並行 spawn Subagent（每個 URL 一個）
-  Step 4:   收集結果 + 驗證嚴謹度
+  Step 4:   收集結果 + 驗證嚴謹度 + 逐個落 results/<n>-<dir>.json（Pass 也落，供事後稽核）
   Step 5:   產生 QA report
 
 Subagent（每個 URL）:

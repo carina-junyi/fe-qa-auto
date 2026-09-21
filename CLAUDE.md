@@ -6,14 +6,20 @@
 
 ## Source Data
 
-- **URL list**: `urls/url_list.txt` — 每行格式 `<url> <status>`
+- **URL list**: `urls/url_list.txt` — 每行格式 `<目標> <status>`
 
-  支援兩種 URL 類型：
+  目標有四種（狀態欄同一套）：
 
-  | URL 類型 | 特徵 | 處理方式 |
+  | 目標類型 | 特徵 | 處理方式 |
   |----------|------|----------|
   | **題目 URL** | 含 `/exercises/` | 直接進入 QA 流程；帶 `?qid=<n>` 時只驗那一題 |
-  | **資料夾 URL** | 不含 `/exercises/`（如 `/course-compare/...`） | Step 1 自動展開為底下的題目 URL |
+  | **資料夾 URL** | junyiacademy URL 且不含 `/exercises/`（如 `/course-compare/...`） | Step 1 自動展開為底下的題目 URL |
+  | **`qid:<n>`** | 無 URL，單題 | **上架前 QA**：題目資料由落地方預先寫在 `questions/qid-<n>/raw.json`（Compass worker 直讀 Datastore），Step 1.5 只讀檔；無作答頁可抽查 |
+  | **`cr:<cover_range>`** | 無 URL，整個題目池（含未上架題） | 同上，`questions/cr-<cover_range>/raw.json` |
+
+  > 為什麼有無 URL 目標：`get_question` 只回**上架後**內容；內容組要的是「後台存檔、還沒上架就先 QA」。
+  > 上架前資料只在 Datastore，本 repo **不碰任何 GCP 憑證**——落地是外部的事，這裡只認 `raw.json`
+  > （合約見 `scripts/fetch_questions.py` docstring）。單機使用者也可以自己把後台 export 的題目 JSON 包成 raw.json。
 
   > 2026-09-19 起 `/exercises/<id>` 在主站會 307 到新版作答頁 `/new-exercise/<id>`，
   > 本工具只支援舊版 DOM。Subagent 開頁前會種 cookie `content_ux_version_v2=old`
@@ -54,7 +60,7 @@
 |---|---------|---------|----------|
 | 1 | `agent-browser` 是否已安裝 | `bin/agent-browser --version`（shim 會依序找 `$AGENT_BROWSER_BIN` → brew → PATH → repo 內 npm） | 依 shim 的錯誤訊息安裝：Mac `brew install agent-browser`、Linux `npm install agent-browser`，或設 `AGENT_BROWSER_BIN` |
 | 2 | `urls/url_list.txt` 是否存在 | 檢查檔案是否存在 | 請先建立：`cp urls/url_list.txt.example urls/url_list.txt` 並填入要 QA 的 URL |
-| 3 | `url_list.txt` 中是否有 ToDo 的 URL | 讀取檔案，篩選 ToDo 或無狀態的行 | 沒有待處理的 URL，請在 url_list.txt 中加入 URL（狀態設為 ToDo 或留空） |
+| 3 | `url_list.txt` 中是否有 ToDo 的目標 | 讀取檔案，篩選 ToDo 或無狀態的行 | 沒有待處理的目標，請在 url_list.txt 中加入 URL 或 `qid:`／`cr:`（狀態設為 ToDo 或留空） |
 | 4 | `scripts/` 目錄的 JS 檔案是否完整 | 檢查是否有 18 個 .js 檔案 | 缺少 JS 工具檔，請確認 scripts/ 目錄完整（應有 18 個 .js 檔案） |
 | 5 | `.env` 是否存在（選填） | 檢查 `.env` 檔案是否存在 | 若 URL 需要登入，請建立：`cp .env.example .env` 並填入帳密。無 `.env` 時隱藏題拿不到、需登入頁面的瀏覽器抽查會跳過 |
 | 6 | `python3` 可用 | `python3 --version` | `scripts/resolve_urls.py` 與 `scripts/fetch_questions.py` 需要 Python 3.9+ |
@@ -79,35 +85,41 @@
 python3 scripts/fetch_questions.py --from-url-list
 ```
 
-對 `url_list.txt` 裡每個 `ToDo` 題目 URL 打 `/api/v2/perseus/<exerciseId>/get_question`，
-把整個題目池寫到 `questions/<exerciseId>/`（`index.json`、`all.md`、`q-<qid>.md`）。
-URL 帶 `?qid=<n>` 時只驗那一題（`all.md` 只含目標題）。有 `.env` 帳密會先登入拿 KAID，隱藏題才拿得到。
+對 `url_list.txt` 裡每個 `ToDo` 目標落地題目檔到 `questions/<dir>/`（`index.json`、`all.md`、`q-<qid>.md`）：
+- 題目 URL → 打 `/api/v2/perseus/<exerciseId>/get_question`，`<dir>` = `<exerciseId>`。
+  URL 帶 `?qid=<n>` 時只驗那一題（`all.md` 只含目標題）。有 `.env` 帳密會先登入拿 KAID，隱藏題才拿得到。
+- `qid:<n>`／`cr:<x>` → 讀**已存在的** `questions/qid-<n>/raw.json`／`questions/cr-<x>/raw.json`，
+  不打網路。`index.json` 多 `hidden_count`、每題 `is_hidden`；`all.md` 每題有「上架狀態」行。
 
-輸出每行一個習題：`✓ <id>：<mode>，N 題，M 題含需開頁的 widget`。
-- `✗ SCHEMA ...`（exit 2）：API 回傳形狀不符合預期——**停下來回報使用者**，該 URL 標
-  `SKIPPED (API schema drift)`，不要自己猜著繼續。這是刻意設計：形狀漂移要看得到。
+輸出每行一個目標：`✓ <目標>：<mode>，N 題[，K 題未上架]，M 題含需開頁的 widget`。
+- `✗ SCHEMA ...`（exit 2）：API／raw 回傳形狀不符合預期——**停下來回報使用者**，該目標標
+  `SKIPPED (schema drift)`，不要自己猜著繼續。這是刻意設計：形狀漂移要看得到。
 - `✗ FETCH ...`：網路／端點錯誤，重跑一次；仍失敗標 `SKIPPED (fetch failed)`。
+- `✗ RAW ...`：無 URL 目標的 `raw.json` 不存在——不是你能補的（要憑證），該目標標
+  `SKIPPED (raw.json 不存在)`，其餘目標照跑。
 
 > 為什麼走 API：2026-09-19 起 `/exercises/` 轉新版作答頁，舊版 DOM 隨時會消失；內容 QA 要的
 > 題幹、選項、正解、解說全在這支 API（主站「列印練習卷」的資料來源）。Perseus 是 client-side
 > 批改，widget 自帶正解，公開題不需登入。
 
-### Step 2: 讀取待處理 URL
+### Step 2: 讀取待處理目標
 
-讀取 `urls/url_list.txt`，篩選出所有 `ToDo`（或無狀態）的 URL。
+讀取 `urls/url_list.txt`，篩選出所有 `ToDo`（或無狀態）的目標（URL 或 `qid:`／`cr:`）。
+Step 1.5 標成 `SKIPPED (...)` 的不算。
 
-### Step 3: 對每個 URL spawn Subagent
+### Step 3: 對每個目標 spawn Subagent
 
-讀取 `references/subagent-prompt-template.md` 中的 prompt 模板，將 `{url}`、`{questions_dir}`
-（= `questions/<exerciseId>`）和 `{session}` 替換為實際值後，spawn subagent。
+讀取 `references/subagent-prompt-template.md` 中的 prompt 模板，將 `{url}`（目標原文）、`{questions_dir}`
+和 `{session}` 替換為實際值後，spawn subagent。`{questions_dir}` 就是 Step 1.5 每行輸出箭頭後的路徑：
+URL → `questions/<exerciseId>`；`qid:<n>` → `questions/qid-<n>`；`cr:<x>` → `questions/cr-<x>`。
 
-每個 URL 使用獨立的 agent-browser session（如 `qa-1`、`qa-2`...），避免 browser 衝突。
+每個目標使用獨立的 agent-browser session（如 `qa-1`、`qa-2`...），避免 browser 衝突。
 
 ```
-for i, url in enumerate(todo_urls):
+for i, target in enumerate(todo_targets):
     session = f"qa-{i+1}"
-    qdir = f"questions/{exercise_id_of(url)}"
-    prompt = (template.replace("{url}", url).replace("{session}", session)
+    qdir = questions_dir_of(target)   # 見上一段的對應規則
+    prompt = (template.replace("{url}", target).replace("{session}", session)
                       .replace("{questions_dir}", qdir))
     spawn subagent(prompt, session)
 ```
@@ -131,8 +143,13 @@ for i, url in enumerate(todo_urls):
    - 每筆記錄都必須有 `myCalculation`（有自己重算）
    - `match: false` 的必須附 `error` 欄位
    - 若 subagent 未提供完整的 `hintsVerification`，主 agent 應標註該 URL 為驗證不完整，要求重新執行
-3. **更新 url_list.txt**：根據 `status` 欄位更新對應 URL 的狀態（Pass/Fail/Warn）
-4. **記錄結果**：暫存每個 URL 的 JSON 結果，供 Step 5 組裝報告
+3. **更新 url_list.txt**：根據 `status` 欄位更新對應目標的狀態（Pass/Fail/Warn）
+4. **落檔（每次都做，不分 Pass／Fail）**：每收到一個 subagent 回傳，**立刻**把它的 JSON 原樣寫到
+   `results/<n>-<questions_dir 的最後一段>.json`（例如 `results/1-n-m6ach9-3a.json`、`results/2-cr-s-eng-s-g12-b5-6-b.json`），
+   不改寫、不摘要。全批結束後再把全部合成一個陣列寫到 `results/run.json`。
+   > 為什麼：全 Pass 不產 QA_result.txt，subagent 的 `hintsVerification` 是事後稽核「驗證深度夠不夠」的唯一證據；
+   > 中途死掉也要留得住已完成的部分，所以是逐個落、不是最後一起落。`results/` 由呼叫方（Compass worker）每 job 清空。
+5. **記錄結果**：暫存每個目標的 JSON 結果，供 Step 5 組裝報告
 
 ### Step 5: Generate QA Report
 
@@ -206,8 +223,10 @@ Subagent 的詳細執行流程定義在 `references/subagent-prompt-template.md`
 
 | 情況 | 處理 |
 |------|------|
-| `fetch_questions.py` 回 `✗ SCHEMA` | `SKIPPED (API schema drift)`，**停下來回報使用者** |
+| `fetch_questions.py` 回 `✗ SCHEMA` | `SKIPPED (schema drift)`，**停下來回報使用者** |
 | `fetch_questions.py` 回 `✗ FETCH`（重跑仍失敗） | `SKIPPED (fetch failed)` |
+| `fetch_questions.py` 回 `✗ RAW`（`qid:`／`cr:` 目標沒有 raw.json） | `SKIPPED (raw.json 不存在)`；其餘目標照跑 |
+| 目標是 `qid:`／`cr:`（無 URL），或目標題 `is_hidden: true` | 只做 Step 1 內容驗證，瀏覽器抽查跳過，notes 記 `browser_spotcheck: unavailable (no URL / unpublished)`；status 由內容決定 |
 | 題目池是空的（習題不存在／下架／全隱藏題未登入） | `SKIPPED (empty pool)`，訊息裡註明是否有登入 |
 | `?qid=` 目標不在題目池 | `SKIPPED (目標 qid 不在題目池)` |
 | 瀏覽器抽查需要登入而無 `.env` | 抽查跳過，notes 記 `browser_spotcheck: requires login`；status 不受影響 |

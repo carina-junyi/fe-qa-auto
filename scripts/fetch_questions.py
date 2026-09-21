@@ -1,9 +1,24 @@
 #!/usr/bin/env python3
 """Deterministic question fetch：把習題的整個題目池從 API 落地成 agent 可讀的檔案。
 
-    python3 scripts/fetch_questions.py <url-or-exercise-id> [...]   # 指定習題
-    python3 scripts/fetch_questions.py --from-url-list               # url_list.txt 裡所有 ToDo 題目
-    選項：--out <dir>（預設 questions/）、--qid <n>（只針對這一題，可重複）
+    python3 scripts/fetch_questions.py <url-or-exercise-id> [...]   # 指定習題（打 API）
+    python3 scripts/fetch_questions.py --from-url-list               # url_list.txt 裡所有 ToDo 目標
+    python3 scripts/fetch_questions.py cr:<cover_range> --raw <raw.json>   # 無 URL 目標，吃預先落地的 raw
+    選項：--out <dir>（預設 questions/）、--qid <n>（只針對這一題，可重複）、--raw <path>
+
+url_list.txt 的目標行有三種（狀態欄與 URL 行同一套）：
+- `https://…/exercises/<id>[?qid=<n>]`：上架後的題目池，本 script 打 get_question 取得。
+- `qid:<n>`／`cr:<cover_range>`：**無 URL 目標**（上架前 QA）。get_question 只回上架後內容，
+  這類目標的資料由外部（Compass worker 直讀 Datastore，或使用者從後台export）預先落地在
+  `questions/<dir>/raw.json`，本 script 只讀檔正規化、**不碰任何憑證**。缺 raw.json 就 `✗ RAW`（exit 1）。
+  `<dir>`：`qid:138767` → `qid-138767`；`cr:s-eng-s-g12-b5-6-b` → `cr-s-eng-s-g12-b5-6-b`。
+
+raw.json 合約（落地方與本 script 的唯一介面）：
+    {"target": "cr:<cover_range>", "source": "datastore", "fetched_at": "<iso>", "truncated": false,
+     "items": [{"qid": 138767, "is_hidden": false, "cover_range_list": ["…"], "updated_at": "<iso>",
+                "subject": "英文", "question": {<Perseus item：question/hints/is_start/correct_nxt_qid…>}}]}
+  `items[].question` 與 get_question 回傳每題的 `question` 欄位同形（Datastore PerseusQuestion 的
+  `question` 屬性就是它）；舊題有 isStart／correctNxtQid camelCase 變體，這裡一併吃。
 
 為什麼走 API 而不是開頁面：
 - 2026-09-19 起主站把 /exercises/<id> 導向新版作答頁，舊版 DOM 隨時會消失；
@@ -49,6 +64,8 @@ DEFAULT_OUT = "questions"
 
 PLACEHOLDER_RE = re.compile(r"\[\[☃ ([a-z-]+) (\d+)\]\]")
 EXERCISE_URL_RE = re.compile(r"junyiacademy\.org/(?:exercises|exercise|new-exercise)/([^/?#\s]+)")
+# 無 URL 目標：qid:<數字>、cr:<cover_range slug>
+TARGET_TOKEN_RE = re.compile(r"^(qid|cr):([A-Za-z0-9_.\-]+)$")
 
 # 能從 options 讀出正解的 widget → 內容 QA 可完整驗
 GRADED_KNOWN = {
@@ -91,6 +108,58 @@ def qid_from_url(arg: str) -> int | None:
     q = urllib.parse.urlparse(arg).query
     v = urllib.parse.parse_qs(q).get("qid")
     return int(v[0]) if v and v[0].isdigit() else None
+
+
+def parse_target(token: str) -> tuple[str, str, list[int]]:
+    """目標字串 → (kind, dir_name, qids)。kind ∈ url／qid／cr。
+
+    dir_name 是 questions/ 底下的資料夾名，也是主 agent 填 {questions_dir} 用的名字。
+    """
+    m = TARGET_TOKEN_RE.match(token.strip())
+    if m:
+        kind, value = m.group(1), m.group(2)
+        if kind == "qid":
+            if not value.isdigit():
+                raise ValueError(f"qid 目標必須是數字：{token}")
+            return "qid", f"qid-{value}", [int(value)]
+        return "cr", f"cr-{value}", []
+    if EXERCISE_URL_RE.search(token):
+        qid = qid_from_url(token)
+        return "url", exercise_id_from(token), [qid] if qid else []
+    return "url", exercise_id_from(token), []
+
+
+def load_raw(folder: str, raw_path: str | None = None) -> tuple[list[dict], dict]:
+    """讀預先落地的 raw.json → (get_question 同形的 pool, meta)。
+
+    pool 每題 = {"qid", "question", "_meta": {is_hidden, cover_range_list, updated_at, subject}}；
+    normalize_item 會把 _meta 帶進題目檔。找不到檔案 raise FileNotFoundError（呼叫端印 ✗ RAW）。
+    """
+    path = raw_path or os.path.join(folder, "raw.json")
+    with open(path, encoding="utf-8") as fh:
+        raw = json.load(fh)
+    items = raw.get("items") if isinstance(raw, dict) else None
+    if not isinstance(items, list):
+        raise SchemaError(f"{path}: items 不是 list")
+    if not items:
+        raise SchemaError(f"{path}: items 是空的（Datastore 查無此目標？）")
+    pool = []
+    for it in items:
+        if not isinstance(it, dict):
+            raise SchemaError(f"{path}: items 內有非物件元素")
+        q = it.get("question")
+        if isinstance(q, str):  # 落地方若直接塞 Datastore 的字串屬性也吃
+            try:
+                q = json.loads(q)
+            except ValueError as err:
+                raise SchemaError(f"{path} qid={it.get('qid')}: question 不是合法 JSON：{err}") from err
+        pool.append({
+            "qid": it.get("qid"),
+            "question": q,
+            "_meta": {k: it.get(k) for k in ("is_hidden", "cover_range_list", "updated_at", "subject", "expire_date")},
+        })
+    meta = {k: raw.get(k) for k in ("target", "source", "fetched_at", "truncated", "note")}
+    return pool, meta
 
 
 def fetch_pool(exercise_id: str, kaid: str | None) -> list[dict]:
@@ -252,16 +321,28 @@ def normalize_item(item: dict, exercise_id: str) -> dict:
         url = (w["spec"] or {}).get("url") if w["type"] == "image" else None
         if url:
             images.append(url)
+    def _first(*keys):
+        for k in keys:
+            if q.get(k) is not None:
+                return q.get(k)
+        return None
+
+    meta = item.get("_meta") or {}
     return {
         "qid": qid,
         "content": content,
         "widgets": widgets,
         "hints": hints,
         "images": images,
-        "is_start": bool(q.get("is_start")),
-        "correct_nxt_qid": q.get("correct_nxt_qid"),
-        "wrong_nxt_qid": q.get("wrong_nxt_qid"),
+        # 舊題（2025 前）用 camelCase：isStart／correctNxtQid／wrongNxtQid
+        "is_start": bool(_first("is_start", "isStart")),
+        "correct_nxt_qid": _first("correct_nxt_qid", "correctNxtQid"),
+        "wrong_nxt_qid": _first("wrong_nxt_qid", "wrongNxtQid"),
         "warnings": warnings,
+        # 只有 raw（Datastore）來源才有：上架狀態等，API 來源一律 None
+        "is_hidden": meta.get("is_hidden"),
+        "updated_at": meta.get("updated_at"),
+        "cover_range_list": meta.get("cover_range_list"),
     }
 
 
@@ -321,6 +402,10 @@ def render_question_md(item: dict, idx: int, total: int, mode: str) -> str:
     if mode == "sequential_quiz":
         out.append(f"依序型：is_start={item['is_start']}，答對→{item['correct_nxt_qid']}，答錯→{item['wrong_nxt_qid']}")
         out.append("")
+    if item.get("is_hidden") is not None:
+        state = "**未上架（is_hidden）**——只能驗內容，作答頁開不到" if item["is_hidden"] else "已上架"
+        out.append(f"上架狀態：{state}；最後更新 {item.get('updated_at') or '?'}；cover_range {item.get('cover_range_list')}")
+        out.append("")
     if item["warnings"]:
         out.append(f"⚠️ warnings：{', '.join(item['warnings'])}")
         out.append("")
@@ -374,7 +459,10 @@ def render_question_md(item: dict, idx: int, total: int, mode: str) -> str:
 
 
 def write_exercise(exercise_id: str, pool: list[dict], out_dir: str,
-                   target_qids: list[int], source_url: str | None) -> dict:
+                   target_qids: list[int], source_url: str | None,
+                   *, target: str | None = None, source: str = "api",
+                   raw_meta: dict | None = None) -> dict:
+    """exercise_id 同時是 questions/ 底下的資料夾名（無 URL 目標時是 qid-<n>／cr-<x>）。"""
     items = [normalize_item(it, exercise_id) for it in pool]
     mode = "sequential_quiz" if any(it["correct_nxt_qid"] or it["wrong_nxt_qid"] for it in items) else "exercise"
     if mode == "sequential_quiz":
@@ -400,24 +488,35 @@ def write_exercise(exercise_id: str, pool: list[dict], out_dir: str,
             fh.write(md)
         if not target_qids or it["qid"] in target_qids:
             md_all.append(md)
+    hidden_n = sum(1 for it in items if it.get("is_hidden"))
     header = [
-        f"# 習題 {exercise_id}　模式：{mode}　題目池 {total} 題",
-        f"來源：{source_url or API.format(exercise_id=exercise_id)}",
+        f"# 習題 {exercise_id}　模式：{mode}　題目池 {total} 題" + (f"（{hidden_n} 題未上架）" if hidden_n else ""),
+        f"目標：{target or source_url or exercise_id}",
+        f"來源：{source_url or API.format(exercise_id=exercise_id)}" if source == "api"
+        else f"來源：預先落地的 raw.json（{(raw_meta or {}).get('source') or 'raw'}，抓取於 {(raw_meta or {}).get('fetched_at') or '?'}）——"
+             "上架前資料，內容以此為準；無作答頁可抽查",
     ]
+    if raw_meta and raw_meta.get("truncated"):
+        header.append(f"⚠️ 題目池被落地方截斷（成本閘），本檔不是完整池：{raw_meta.get('note') or ''}")
     if target_qids:
         header.append(f"**只驗目標題 qid {target_qids}**（其餘 {total - len(md_all)} 題不在本次範圍）")
     with open(os.path.join(folder, "all.md"), "w", encoding="utf-8") as fh:
         fh.write("\n".join(header) + "\n\n---\n\n" + "\n---\n\n".join(md_all))
     index = {
         "exercise_id": exercise_id,
+        "target": target or source_url or exercise_id,
+        "source": source,
+        "raw": raw_meta,
         "source_url": source_url,
         "mode": mode,
         "total": total,
+        "hidden_count": hidden_n,
         "target_qids": target_qids,
         "missing_target_qids": missing_targets,
         "fetched_at": time.strftime("%Y-%m-%dT%H:%M:%S%z"),
         "questions": [
             {"qid": it["qid"], "file": f"q-{it['qid']}.md",
+             "is_hidden": it.get("is_hidden"),
              "types": [w["type"] for w in it["widgets"] if w["graded"]],
              "needs_browser": any("needs_browser" in w["flags"] for w in it["widgets"]),
              "hints": len(it["hints"]), "images": len(it["images"]), "warnings": it["warnings"]}
@@ -435,8 +534,12 @@ def write_exercise(exercise_id: str, pool: list[dict], out_dir: str,
 # ---------------------------------------------------------------------------
 
 
-def targets_from_url_list() -> list[tuple[str, str, list[int]]]:
-    """url_list.txt 裡 ToDo／無狀態的題目 URL → (exercise_id, url, qids)。"""
+def targets_from_url_list() -> list[tuple[str, str, str, list[int]]]:
+    """url_list.txt 裡 ToDo／無狀態的目標 → (kind, dir_name, token, qids)。
+
+    kind=url 是題目 URL（資料夾 URL 不在此，那是 resolve_urls 的事）；
+    kind=qid／cr 是無 URL 目標（讀 raw.json）。
+    """
     out = []
     try:
         with open(URL_LIST, encoding="utf-8") as fh:
@@ -449,23 +552,30 @@ def targets_from_url_list() -> list[tuple[str, str, list[int]]]:
             continue
         url, _, rest = s.partition(" ")
         status = rest.strip().split(" ", 1)[0] if rest.strip() else "ToDo"
-        if status != "ToDo" or not EXERCISE_URL_RE.search(url):
+        if status.lower() != "todo":
             continue
-        qid = qid_from_url(url)
-        out.append((exercise_id_from(url), url, [qid] if qid else []))
+        if not (EXERCISE_URL_RE.search(url) or TARGET_TOKEN_RE.match(url)):
+            continue
+        kind, dir_name, qids = parse_target(url)
+        out.append((kind, dir_name, url, qids))
     return out
 
 
 def main(argv: list[str]) -> int:
+    # stdout／stderr 交錯時順序要對得上（✗ 行走 stderr）
+    sys.stdout.reconfigure(line_buffering=True)
     out_dir = DEFAULT_OUT
     qids: list[int] = []
     args: list[str] = []
+    raw_path: str | None = None
     it = iter(argv)
     for a in it:
         if a == "--out":
             out_dir = next(it)
         elif a == "--qid":
             qids.append(int(next(it)))
+        elif a == "--raw":
+            raw_path = next(it)
         elif a == "--from-url-list":
             args.append(a)
         elif a.startswith("-"):
@@ -480,21 +590,37 @@ def main(argv: list[str]) -> int:
     else:
         targets = []
         for a in args:
-            url_qid = qid_from_url(a)
-            targets.append((exercise_id_from(a), a if "://" in a else None,
-                            sorted(set(qids + ([url_qid] if url_qid else [])))))
+            kind, dir_name, tqids = parse_target(a)
+            targets.append((kind, dir_name, a, sorted(set(qids + tqids))))
+    if raw_path and len(targets) != 1:
+        raise SystemExit("--raw 一次只能配一個目標")
 
+    # 只有 URL 目標才需要打 API（登入拿 KAID 補隱藏題）；raw 目標零網路、零憑證
     kaid: str | None = None
-    creds = read_credentials()
-    if creds:
-        kaid = login_kaid(*creds)
-    print(f"- 登入：{'KAID 已取得（含隱藏題）' if kaid else '匿名（無帳密或登入失敗；隱藏題拿不到）'}")
+    if any(kind == "url" for kind, *_ in targets):
+        creds = read_credentials()
+        if creds:
+            kaid = login_kaid(*creds)
+        print(f"- 登入：{'KAID 已取得（含隱藏題）' if kaid else '匿名（無帳密或登入失敗；隱藏題拿不到）'}")
 
     rc = 0
-    for exercise_id, url, target_qids in targets:
+    for kind, dir_name, token, target_qids in targets:
+        folder = os.path.join(out_dir, dir_name)
         try:
-            pool = fetch_pool(exercise_id, kaid)
-            index = write_exercise(exercise_id, pool, out_dir, target_qids, url)
+            if kind == "url":
+                pool = fetch_pool(dir_name, kaid)
+                index = write_exercise(dir_name, pool, out_dir, target_qids,
+                                       token if "://" in token else None, target=token)
+            else:
+                try:
+                    pool, meta = load_raw(folder, raw_path)
+                except FileNotFoundError:
+                    print(f"  ✗ RAW {token}：{os.path.join(folder, 'raw.json')} 不存在——無 URL 目標的題目"
+                          f"資料要由落地方（Compass worker 讀 Datastore）先寫好，本 script 不碰憑證", file=sys.stderr)
+                    rc = rc or 1
+                    continue
+                index = write_exercise(dir_name, pool, out_dir, target_qids, None,
+                                       target=token, source="raw", raw_meta=meta)
         except SchemaError as err:
             print(f"  ✗ SCHEMA {err}", file=sys.stderr)
             rc = 2
@@ -507,8 +633,10 @@ def main(argv: list[str]) -> int:
         tgt = f"，目標 qid {target_qids}" if target_qids else ""
         miss = f"，⚠️ 目標不在池內：{index['missing_target_qids']}" if index["missing_target_qids"] else ""
         warn = f"，warnings：{index['warnings']}" if index["warnings"] else ""
-        print(f"  ✓ {exercise_id}：{index['mode']}，{index['total']} 題，{nb} 題含需開頁的 widget"
-              f"{tgt}{miss}{warn} → {os.path.join(out_dir, exercise_id)}/")
+        hid = f"，{index['hidden_count']} 題未上架" if index.get("hidden_count") else ""
+        src = "" if kind == "url" else f"（raw：{(index.get('raw') or {}).get('source') or '?'}）"
+        print(f"  ✓ {token}：{index['mode']}，{index['total']} 題{hid}，{nb} 題含需開頁的 widget"
+              f"{tgt}{miss}{warn}{src} → {folder}/")
     return rc
 
 
