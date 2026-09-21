@@ -15,6 +15,11 @@
   | **題目 URL** | 含 `/exercises/` | 直接進入 QA 流程 |
   | **資料夾 URL** | 不含 `/exercises/`（如 `/course-compare/...`） | Step 1 自動展開為底下的題目 URL |
 
+  > 2026-09-19 起 `/exercises/<id>` 在主站會 307 到新版作答頁 `/new-exercise/<id>`，
+  > 本工具只支援舊版 DOM。Subagent 開頁前會種 cookie `content_ux_version_v2=old`
+  > 切回舊版（見 `references/subagent-prompt-template.md` Step 1）；`/new-exercise/`
+  > 形式的 URL **不要**直接放進 url_list.txt，先改成 `/exercises/<id>`。
+
   | 狀態 | 說明 | 何時標記 |
   |------|------|----------|
   | `ToDo` | 尚未開始（可省略） | URL 加入時 |
@@ -186,3 +191,4 @@ Subagent 的詳細執行流程定義在 `references/subagent-prompt-template.md`
 | 元素不在畫面內 | `scrollintoview @eN` 或 `scroll down 300` |
 | `find text` 多重匹配 | 改用 CSS selector |
 | diagnostic-exam 類型 | `SKIPPED (非 exercises 類型)` |
+| 種了 `content_ux_version_v2=old` 仍落在 `/new-exercise/` | `SKIPPED (新版作答頁，舊版入口不可用)`——不要在新版 DOM 上硬跑腳本 |

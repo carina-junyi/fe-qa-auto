@@ -43,11 +43,28 @@
 
 ### Step 1: 開啟頁面並偵測類型
 
+> **2026-09-19 起主站把 `/exercises/<id>` 307 轉到新版作答頁 `/new-exercise/<id>`**
+> （release rc-2026-09-19）。本工具的 `scripts/` 全押舊版 DOM，新版頁上
+> `probe_page.js` 會回 `exerciseMode: "unknown"`、`identify_qtype.js` 回
+> `no workarea found`。主站保留 cookie `content_ux_version_v2=old` 切回舊版
+> （與頁面右上「切換舊版作答頁」按鈕同一機制，30 天有效）——**每個 session
+> 開第一個頁面後先種 cookie、再重開 URL**：
+
 ```bash
 bin/agent-browser --session {session} open "{url}"
 bin/agent-browser --session {session} wait 3000
+# 同源之下種 cookie（document.cookie 只能在 junyiacademy.org 頁面上設）
+bin/agent-browser --session {session} eval "document.cookie='content_ux_version_v2=old; max-age=2592000; path=/; SameSite=Lax'"
+bin/agent-browser --session {session} open "{url}"
+bin/agent-browser --session {session} wait 3000
 bin/agent-browser --session {session} eval "$(cat scripts/mute_audio.js)"
+# 確認真的落在舊版：pathname 應為 /exercise/<id>（單數，帶 ?redirect_count=1），不是 /new-exercise/
+bin/agent-browser --session {session} eval "location.pathname"
 ```
+
+若 `location.pathname` 仍以 `/new-exercise/` 開頭，代表舊版入口已關閉或 cookie
+沒生效——標記 `SKIPPED (新版作答頁，舊版入口不可用)` 並結束，**不要**在新版
+DOM 上硬跑腳本再自行推論題型。
 
 #### Step 1a: 登入檢查（若頁面需要登入）
 
@@ -78,12 +95,13 @@ bin/agent-browser --session {session} wait 5000
 3. 再次執行 `check_login.js` 確認登入成功（`needsLogin: false`）
    - 若仍需登入，標記 `SKIPPED (login failed)` 並結束
 
-4. 重新開啟原始 URL：
+4. 重新開啟原始 URL（cookie 在同一 session 內仍在，不用重種；仍要複查 pathname）：
 
 ```bash
 bin/agent-browser --session {session} open "{url}"
 bin/agent-browser --session {session} wait 3000
 bin/agent-browser --session {session} eval "$(cat scripts/mute_audio.js)"
+bin/agent-browser --session {session} eval "location.pathname"
 ```
 
 > **注意**：`JUNYI_EMAIL` 與 `JUNYI_PASSWORD` 僅用於填入 agent-browser 指令，**不得在任何輸出、log 或回傳 JSON 中顯示密碼明文**。
