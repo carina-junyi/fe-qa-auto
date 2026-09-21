@@ -40,6 +40,10 @@ Automated QA testing for Junyi Academy math exercises — validates question ste
 | **題目 URL** | `https://www.junyiacademy.org/exercises/...` | 直接 QA |
 | **資料夾 URL** | `https://www.junyiacademy.org/course-compare/...` | Step 0 自動展開為底下的題目 URL |
 
+> 2026-09-19 起主站把 `/exercises/<id>` 轉到新版作答頁 `/new-exercise/<id>`；
+> QA 腳本只支援舊版 DOM，subagent 會先種 cookie `content_ux_version_v2=old`
+> 切回舊版再跑。`/new-exercise/...` 形式的連結請先改回 `/exercises/...`。
+
 ## Workflow
 
 ```
