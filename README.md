@@ -1,10 +1,10 @@
 # fe-qa-auto
 
-Automated QA testing for Junyi Academy math exercises — validates question stems, answers, and hint explanations via browser automation with parallel subagent execution.
+Automated QA testing for Junyi Academy exercises (all subjects) — validates question stems, answers, and hint explanations via browser automation with parallel subagent execution.
 
 ## Overview
 
-對均一教育平台的數學練習頁面進行自動化 QA 驗證，檢查題幹、選項、答案與解題說明（hints）是否有數學錯誤。
+對均一教育平台的練習頁面（各科目）進行自動化 QA 驗證，檢查題幹、選項、答案與解題說明（hints）是否有內容錯誤。數學題獨立驗算；語文與知識類題目核對語法、事實與選項唯一性。
 
 ## Architecture
 

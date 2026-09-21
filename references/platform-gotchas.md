@@ -40,7 +40,7 @@ bin/agent-browser mouse move <x> <y> && bin/agent-browser mouse down && bin/agen
 ### 3. 解題說明逐步展開
 
 每次點 `#hint` 顯示一步（1/3 → 2/3 → 3/3）。典型結構：
-- Step 1/N：數學解法
+- Step 1/N：解法／解說
 - Step 2/N：推薦影片
 - Step N/N：最終答案確認（「答案選 (X)」）
 

@@ -5,7 +5,7 @@ description: Extract and Verify Stem (擷取並驗證題幹)
 
 # Extract and Verify Stem (擷取並驗證題幹)
 
-擷取目前題目的題幹內容，並驗證其中的數學是否正確。
+擷取目前題目的題幹內容，並驗證其內容是否正確（依科目：數學驗算、語文核對語法與語意、知識題核對事實）。
 
 **前置條件：** `/probe-page` 已完成，頁面結構已確認。
 
@@ -55,15 +55,17 @@ bin/agent-browser screenshot
 1. 記錄到 QA_result.txt Notes：`DOM extraction failed for stem, fell back to snapshot/screenshot`
 2. 觸發 `page_structures/shared/question-stem.md` 的更新探索
 
-## Step 4: 驗證題幹數學正確性
+## Step 4: 驗證題幹內容正確性
 
-檢查擷取到的題幹：
+先依題幹語言與內容判定科目（見 subagent template「科目判定與驗證準則」），再檢查：
 
 | 檢查項目 | 說明 |
 |----------|------|
-| 數字與公式 | 是否內部一致、無矛盾？ |
-| 數學意義 | 問題是否合理（無不可能的約束）？ |
-| 表達式渲染 | 有無亂碼、缺項、符號錯誤？ |
+| 數字與公式（數學／自然） | 是否內部一致、無矛盾？ |
+| 題意 | 問題是否合理（無不可能的約束、無歧義到答不出來）？ |
+| 語法與拼字（語文） | 題幹本身的英文／中文有無文法、拼字、標點錯誤？空格位置是否明確？ |
+| 事實（自然／社會） | 陳述的事實、年代、名稱是否正確？ |
+| 渲染 | 有無亂碼、缺項、符號錯誤、圖片缺失？ |
 
 有錯誤則記錄，供後續寫入 QA_result.txt。
 
@@ -75,7 +77,7 @@ bin/agent-browser screenshot
 - method: DOM / snapshot / screenshot
 - stemText: <重建的題幹文字>
 - stemParts: [{type, value}]
-- mathValid: true / false
+- stemValid: true / false
 - errors: []  # 若有錯誤，列出位置與描述
 - notes: <降級紀錄或其他觀察>
 ```
