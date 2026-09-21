@@ -2,7 +2,7 @@
 
 ## Overview
 
-對均一教育平台的數學練習頁面進行 QA 驗證，檢查題幹、選項、答案與解題說明是否有**數學錯誤**。
+對均一教育平台的練習頁面（**各科目**：數學、英文、國文、自然、社會…）進行 QA 驗證，檢查題幹、選項、答案與解題說明是否有**內容錯誤**。各科的驗證準則見 `references/subagent-prompt-template.md`「科目判定與驗證準則」；**不得因為科目不是數學而 SKIPPED**。
 
 ## Source Data
 
@@ -24,9 +24,9 @@
   |------|------|----------|
   | `ToDo` | 尚未開始（可省略） | URL 加入時 |
   | `InProgress` | 正在 QA | Subagent 開始時 |
-  | `Pass` | 無數學錯誤 | Subagent 完成後 |
-  | `Fail` | 有數學錯誤 | Subagent 完成後 |
-  | `Warn` | 數學內容正確（透過 API 備援確認），但 browser 操作有困難，頁面渲染未完整驗證 | Subagent 完成後 |
+  | `Pass` | 無內容錯誤 | Subagent 完成後 |
+  | `Fail` | 有內容錯誤 | Subagent 完成後 |
+  | `Warn` | 內容正確（透過 API 備援確認），但 browser 操作有困難，頁面渲染未完整驗證 | Subagent 完成後 |
 
   **只處理 `ToDo`（或無狀態）的 URL。** 以 `#` 開頭的行為註解，會被略過。
 
@@ -171,7 +171,7 @@ Subagent 的詳細執行流程定義在 `references/subagent-prompt-template.md`
 
 ### 關鍵規則（Subagent 必須遵守）
 
-- **嚴格模式**：每一題都必須展開所有 hints，逐步驗證數學正確性
+- **嚴格模式**：每一題都必須展開所有 hints，逐步驗證內容正確性（數學題逐步驗算；語文／知識題逐句核對說明與答案、選項是否一致）
 - **依序型全程 browser**：不得跳過 browser 改用 API
 - **獨立計算**：不可使用 API 的答案提交，答案必須獨立計算
 - **答錯不放棄**：展開 hints → reload → dot navigation → 繼續
