@@ -32,7 +32,7 @@
   | `InProgress` | 正在 QA | Subagent 開始時 |
   | `Pass` | 無內容錯誤 | Subagent 完成後 |
   | `Fail` | 有內容錯誤 | Subagent 完成後 |
-  | `Warn` | 內容正確（透過 API 備援確認），但 browser 操作有困難，頁面渲染未完整驗證 | Subagent 完成後 |
+  | `Warn` | 內容正確，但瀏覽器抽查沒做成（新版 UI、要登入、頁面開不起來、抽查題未上架…任何前端狀況）或抽到輕微渲染問題——頁面未完整驗證。`qid:`／`cr:` 目標沒有作答頁，不因此 Warn | Subagent 完成後 |
 
   **只處理 `ToDo`（或無狀態）的 URL。** 以 `#` 開頭的行為註解，會被略過。
 
@@ -205,7 +205,7 @@ Footer:
 Subagent 的詳細執行流程定義在 `references/subagent-prompt-template.md`，包含：
 
 - **Step 1 內容驗證**（主路徑）：讀 `questions/<exerciseId>/all.md`，全部題目逐題：蓋住正解獨立判斷 → 比對 → 逐步驗解說 → 圖文一致 → 選項逐一判對錯。不開瀏覽器。
-- **Step 2 瀏覽器抽查**（1 題）：種 cookie 開舊版頁，看渲染、提交 Step 1 判定的正解看平台是否接受。舊版入口不可用就記 notes 跳過，不影響 status。
+- **Step 2 瀏覽器抽查**（1 題）：種 cookie 開舊版頁，看渲染、提交 Step 1 判定的正解看平台是否接受。任何前端狀況讓抽查做不成就記 notes 跳過，URL 目標內容全對時降為 Warn（`qid:`／`cr:` 目標沒有作答頁，仍 Pass）。
 - 依序型（sequential_quiz）與累積型（exercise）都走同一條路；依序型多檢查分支 qid 是否存在。
 - 結構化 JSON 回傳
 
@@ -228,13 +228,15 @@ Subagent 的詳細執行流程定義在 `references/subagent-prompt-template.md`
 | `fetch_questions.py` 回 `✗ SCHEMA` | `SKIPPED (schema drift)`，**停下來回報使用者** |
 | `fetch_questions.py` 回 `✗ FETCH`（重跑仍失敗） | `SKIPPED (fetch failed)` |
 | `fetch_questions.py` 回 `✗ RAW`（`qid:`／`cr:` 目標沒有 raw.json） | `SKIPPED (raw.json 不存在)`；其餘目標照跑 |
-| 目標是 `qid:`／`cr:`（無 URL），或目標題 `is_hidden: true` | 只做 Step 1 內容驗證，瀏覽器抽查跳過，notes 記 `browser_spotcheck: unavailable (no URL / unpublished)`；status 由內容決定 |
+| 目標是 `qid:`／`cr:`（無 URL） | 只做 Step 1 內容驗證，瀏覽器抽查跳過，notes 記 `browser_spotcheck: unavailable (no URL)`；status 由內容決定（上架前本來就沒有作答頁，是唯一不因抽查缺席降級的情況） |
+| URL 目標但抽查題 `is_hidden: true` | 抽查跳過，notes 記 `browser_spotcheck: unavailable (unpublished)`；內容全對時 **Warn** |
 | 依序型 `index.json` 的 `sequence.errors` 非空（起點不唯一、答對指自己、迴圈、分支指向池外） | 該目標 **Fail**，errors 記 `location: "Sequence"`——這是 `fetch_questions.py` 決定性算出的題組流程設定錯誤，取代舊版「瀏覽器全程走題組」 |
 | 題目池是空的（習題不存在／下架／全隱藏題未登入） | `SKIPPED (empty pool)`，訊息裡註明是否有登入 |
 | `?qid=` 目標不在題目池 | `SKIPPED (目標 qid 不在題目池)` |
-| 瀏覽器抽查需要登入而無 `.env` | 抽查跳過，notes 記 `browser_spotcheck: requires login`；status 不受影響 |
+| 瀏覽器抽查需要登入而無 `.env`，或登入失敗 | 抽查跳過，notes 記 `browser_spotcheck: requires login`／`login failed`；內容全對時 **Warn** |
 | 頁面未載入 | `wait --load networkidle` + `wait 3000` 重試 |
 | 元素不在畫面內 | `scrollintoview @eN` 或 `scroll down 300` |
 | `find text` 多重匹配 | 改用 CSS selector |
 | diagnostic-exam 類型 | `SKIPPED (非 exercises 類型)` |
-| 種了 `content_ux_version_v2=old` 仍落在 `/new-exercise/` | 瀏覽器抽查跳過，notes 記 `browser_spotcheck: unavailable (new UI)`；內容驗證照常，status 不受影響。不要在新版 DOM 上硬跑腳本 |
+| 種了 `content_ux_version_v2=old` 仍落在 `/new-exercise/` | 瀏覽器抽查跳過，notes 記 `browser_spotcheck: unavailable (new UI)`；內容驗證照常，內容全對時 **Warn**。不要在新版 DOM 上硬跑腳本 |
+| 其他任何前端狀況讓抽查做不完（頁面開不起來、逾時、元素抓不到） | 抽查跳過，notes 記 `browser_spotcheck: unavailable (<原因>)`；內容全對時 **Warn**。前端沒驗到就不能叫 Pass |

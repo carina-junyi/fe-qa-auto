@@ -81,9 +81,10 @@
 目的只有兩件事：頁面渲染有沒有壞（亂碼、LaTeX 沒排出來、圖片破圖），以及平台是否接受你在 Step 1 判定的正解。
 內容對錯已在 Step 1 定案，這一步**不重驗內容**，累積型也**只做一題**，不要做到 passCondition。
 
-**先判要不要做**：目標不是 URL（`qid:`／`cr:`），或要抽的那題 `is_hidden: true` → **整段跳過**，
-每題 notes 記 `browser_spotcheck: unavailable (no URL / unpublished)`，直接到 Step 3。上架前的題沒有作答頁，
-硬開只會浪費時間；status 一律由 Step 1 決定（見狀態判定）。
+**先判要不要做**：目標不是 URL（`qid:`／`cr:`）→ **整段跳過**，每題 notes 記
+`browser_spotcheck: unavailable (no URL)`，直接到 Step 3。上架前的題沒有作答頁，硬開只會浪費時間；
+這是唯一「抽查缺席仍可 Pass」的情況（見狀態判定）。URL 目標但要抽的那題 `is_hidden: true` → 同樣跳過，
+notes 記 `browser_spotcheck: unavailable (unpublished)`，內容全對時 status 為 **Warn**。
 
 抽哪一題：有 target_qids 就抽目標題；否則優先 index.json 裡 `needs_browser: true` 的題
 （互動座標圖、量尺、拖曳圖、iframe——這些的作答面只有開頁看得到）；都沒有就抽第一題。
@@ -104,8 +105,9 @@ bin/agent-browser --session {session} eval "location.pathname"
 ```
 
 - pathname 仍以 `/new-exercise/` 開頭 → 舊版入口已不可用。**不做抽查**，每題 notes 記
-  `browser_spotcheck: unavailable (new UI)`，status 依 Step 1 結果決定（見狀態判定）。不要在新版 DOM 上硬跑腳本。
-- 頁面要登入（`check_login.js` 回 needsLogin: true）→ 照下方登入流程；登入失敗 → notes 記 `browser_spotcheck: login failed`，同樣不影響 status。
+  `browser_spotcheck: unavailable (new UI)`，內容全對時 status 為 **Warn**（見狀態判定）。不要在新版 DOM 上硬跑腳本。
+- 頁面要登入（`check_login.js` 回 needsLogin: true）→ 照下方登入流程；登入失敗 → notes 記 `browser_spotcheck: login failed`，內容全對時同樣 **Warn**。
+- 頁面開不起來、逾時、腳本抓不到元素等任何前端狀況讓抽查做不完 → notes 記 `browser_spotcheck: unavailable (<原因>)`，內容全對時 **Warn**。
 - 開到舊版頁 → `probe_page.js` 確認 exerciseMode；截圖一張（`screenshot`）看渲染；抽查題若不是第一題，用 reload／dot navigation 跳到它（或直接抽當前顯示的那一題，notes 記實際抽到的 qid）；
   依「identify-question-type」→ 對應 `qa-*-question` skill 填入 Step 1 判定的正解，提交一次，`check_result.js` 看平台是否判對。
 - 抽查發現渲染問題（亂碼、破圖、LaTeX 未渲染、選項顯示不全）→ 記 error `location: "Render"`；學生仍看得懂題目 → status 至少 Warn；看不到題幹或選項 → Fail。
@@ -114,7 +116,7 @@ bin/agent-browser --session {session} eval "location.pathname"
 #### 登入流程（頁面需要登入時）
 
 1. 用 Read 工具讀取 `.env`，取得 `JUNYI_EMAIL` 與 `JUNYI_PASSWORD`
-   - 若 `.env` 不存在或帳密為空 → notes 記 `browser_spotcheck: requires login, no .env`，跳過抽查
+   - 若 `.env` 不存在或帳密為空 → notes 記 `browser_spotcheck: requires login, no .env`，跳過抽查（內容全對時 Warn）
 
 2. 執行登入：
 
@@ -321,7 +323,8 @@ Hint 1/3: cosB = (5²+10²-17²)/(2×5×10) = (5+10-17)/100 = -2/100
 - 所有題目 hintsValid=true 且無 errors → status: "Pass"
 - 任一題有 errors（內容錯誤、或抽查發現平台不接受正解／嚴重渲染問題）→ status: "Fail"
 - 內容全部正確、Step 2 抽查發現輕微渲染問題（學生仍看得懂）→ status: "Warn"，errors 記 location "Render"
-- 內容全部正確、Step 2 抽查做不了（新版 UI、要登入而無帳密、頁面開不起來、無 URL 目標、未上架題）→ **status: "Pass"**，每題 notes 記 `browser_spotcheck: unavailable (<原因>)`。內容 QA 是主目的，抽查缺席不降級
+- **URL 目標**、內容全部正確、Step 2 抽查做不了（新版 UI、要登入而無帳密或登入失敗、頁面開不起來、抽查題未上架、任何前端狀況）→ **status: "Warn"**，每題 notes 記 `browser_spotcheck: unavailable (<原因>)`，`errors` 留空。內容對是 Step 1 定的，但前端沒驗到就不能叫 Pass——讀報告的人要看得到「頁面未驗」
+- **`qid:`／`cr:` 目標**（上架前，本來就沒有作答頁）、內容全部正確 → **status: "Pass"**，每題 notes 記 `browser_spotcheck: unavailable (no URL)`。這是唯一抽查缺席不降級的情況
 - **不得**因科目非數學、或題目是英文而回 SKIPPED；DOM 為 radio／checkbox／select／input／drag-sort 之一就照對應 skill 驗
 
 ## 收尾（必須執行）

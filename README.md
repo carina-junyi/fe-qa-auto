@@ -59,7 +59,7 @@ Automated QA testing for Junyi Academy exercises (all subjects) — validates qu
 
 Subagent（每個 URL）:
   1. 內容驗證：讀 questions/<id>/all.md，全部題目逐題（獨立判斷 → 比對正解 → 逐步驗解說 → 圖文一致 → 選項逐一判）
-  2. 瀏覽器抽查：種 cookie 開舊版頁 1 題，看渲染、提交正解看平台是否接受（開不了就記 notes 跳過）
+  2. 瀏覽器抽查：種 cookie 開舊版頁 1 題，看渲染、提交正解看平台是否接受（任何前端狀況開不了就記 notes 跳過，內容全對時降為 Warn；`qid:`／`cr:` 目標沒有作答頁，仍 Pass）
   3. 回傳結構化 JSON（含 hintsVerification）
 ```
 
