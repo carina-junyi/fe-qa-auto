@@ -74,6 +74,8 @@
 - `sequence.errors` 非空 → 該目標 **Fail**，每條 error 原樣記成一筆 `location: "Sequence"`（qid 填 error 提到的題），
   這就是「題組在答題時最後一題一直無法結束」那類設定錯誤，不需要開瀏覽器走一遍。
 - `sequence.warnings`（走不到的題、答錯回頭路）記進對應題的 notes，不降級。
+- `sequence` 是 `null` 而 mode 仍是 sequential_quiz → 單題 `qid:` 目標，題目池只是題組的一片，**不做流程判定**
+  （nxt 指到池外是正常，不是錯），all.md 標頭會寫「題組流程檢查：略過」。
 - 你自己再看一眼答錯分支指向的補救題內容是否合理（例如答錯高階題卻跳到不相關的題）。
 
 ### Step 2: 瀏覽器抽查（渲染與提交，只抽 1 題）

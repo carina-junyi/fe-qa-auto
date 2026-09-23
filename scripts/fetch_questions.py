@@ -577,7 +577,11 @@ def write_exercise(exercise_id: str, pool: list[dict], out_dir: str,
             cur = by_qid[cur]["correct_nxt_qid"]
         ordered.extend(it for it in items if it["qid"] not in seen)
         items = ordered
-    sequence = sequence_check(items) if mode == "sequential_quiz" else None
+    # 單題 qid: 目標的題目池只是題組的一片（落地方只撈那一題），is_start／nxt 指到池外是
+    # 必然的，不是設定錯——流程檢查只在拿得到整個題組時做（URL 池、cr: 池）。
+    # 2026-09-23 巡邏收單實跑 4 個 qid: 目標 3 個因此假 Fail。
+    partial_pool = bool(target) and target.startswith("qid:")
+    sequence = sequence_check(items) if (mode == "sequential_quiz" and not partial_pool) else None
     known_qids = {it["qid"] for it in items}
     missing_targets = [q for q in target_qids if q not in known_qids]
     folder = os.path.join(out_dir, exercise_id)
@@ -609,6 +613,10 @@ def write_exercise(exercise_id: str, pool: list[dict], out_dir: str,
             header.extend(f"- {e}" for e in sequence["errors"])
         if sequence["warnings"]:
             header.append("題組流程提醒（記 notes，不降級）：" + "；".join(sequence["warnings"]))
+    elif mode == "sequential_quiz" and partial_pool:
+        nxt = items[0]
+        header.append(f"題組流程檢查：略過——單題目標，題目池只是題組的一片（本題答對 → {nxt['correct_nxt_qid']}，"
+                      f"答錯 → {nxt['wrong_nxt_qid']}，都在池外屬正常）。要驗整個題組請用 cr:<cover_range> 或題組 URL")
     if target_qids:
         header.append(f"**只驗目標題 qid {target_qids}**（其餘 {total - len(md_all)} 題不在本次範圍）")
     with open(os.path.join(folder, "all.md"), "w", encoding="utf-8") as fh:
