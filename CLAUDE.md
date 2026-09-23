@@ -231,6 +231,7 @@ Subagent 的詳細執行流程定義在 `references/subagent-prompt-template.md`
 | 目標是 `qid:`／`cr:`（無 URL） | 只做 Step 1 內容驗證，瀏覽器抽查跳過，notes 記 `browser_spotcheck: unavailable (no URL)`；status 由內容決定（上架前本來就沒有作答頁，是唯一不因抽查缺席降級的情況） |
 | URL 目標但抽查題 `is_hidden: true` | 抽查跳過，notes 記 `browser_spotcheck: unavailable (unpublished)`；內容全對時 **Warn** |
 | 依序型 `index.json` 的 `sequence.errors` 非空（起點不唯一、答對指自己、迴圈、分支指向池外） | 該目標 **Fail**，errors 記 `location: "Sequence"`——這是 `fetch_questions.py` 決定性算出的題組流程設定錯誤，取代舊版「瀏覽器全程走題組」 |
+| 單題 `qid:` 目標、mode 是 sequential_quiz、`sequence` 為 `null` | 題目池只是題組的一片，流程檢查略過（`fetch_questions.py` 不算）；nxt 指到池外不是錯。要驗整組用 `cr:` 或題組 URL |
 | 題目池是空的（習題不存在／下架／全隱藏題未登入） | `SKIPPED (empty pool)`，訊息裡註明是否有登入 |
 | `?qid=` 目標不在題目池 | `SKIPPED (目標 qid 不在題目池)` |
 | 瀏覽器抽查需要登入而無 `.env`，或登入失敗 | 抽查跳過，notes 記 `browser_spotcheck: requires login`／`login failed`；內容全對時 **Warn** |
