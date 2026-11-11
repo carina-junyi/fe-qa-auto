@@ -21,10 +21,14 @@
   > 上架前資料只在 Datastore，本 repo **不碰任何 GCP 憑證**——落地是外部的事，這裡只認 `raw.json`
   > （合約見 `scripts/fetch_questions.py` docstring）。單機使用者也可以自己把後台 export 的題目 JSON 包成 raw.json。
 
-  > 2026-09-19 起 `/exercises/<id>` 在主站會 307 到新版作答頁 `/new-exercise/<id>`，
-  > 本工具只支援舊版 DOM。Subagent 開頁前會種 cookie `content_ux_version_v2=old`
-  > 切回舊版（見 `references/subagent-prompt-template.md` Step 1）；`/new-exercise/`
-  > 形式的 URL **不要**直接放進 url_list.txt，先改成 `/exercises/<id>`。
+  > **2026-09-21 起主站只剩新版作答頁**（release prod-2026-09-21 移除了 cookie 版本判斷）：
+  > `/exercises/<id>` 一律轉到 `/exercise/<id>`（一般習題）或 `/sequential-quiz/<id>`（講義題組），
+  > cookie `content_ux_version_v2=old` 已無作用。`scripts/` 新舊兩版 DOM 都認得，Subagent 直接在新版頁面上抽查
+  > （見 `references/subagent-prompt-template.md` Step 2、`page_structures/shared/new-ui.md`）。
+  > url_list.txt 仍然放 `/exercises/<id>` 形式的 URL（`fetch_questions.py` 與資料夾展開都認這個形式）。
+  > 新版頁面顯示哪一題由平台決定；`?qid=<n>` 只有**管理員帳號**登入時才會真的開出那一題
+  > （主站 `DoExercise`：`pinnedQuestionId = isModerator ? qid : undefined`），所以要讓抽查落在指定題，
+  > `.env` 的帳號得是管理員；否則抽查的是畫面上那一題（內容驗證不受影響，仍只驗指定題）。
 
   | 狀態 | 說明 | 何時標記 |
   |------|------|----------|
@@ -32,7 +36,7 @@
   | `InProgress` | 正在 QA | Subagent 開始時 |
   | `Pass` | 無內容錯誤 | Subagent 完成後 |
   | `Fail` | 有內容錯誤 | Subagent 完成後 |
-  | `Warn` | 內容正確，但瀏覽器抽查沒做成（新版 UI、要登入、頁面開不起來、抽查題未上架…任何前端狀況）或抽到輕微渲染問題——頁面未完整驗證。`qid:`／`cr:` 目標沒有作答頁，不因此 Warn | Subagent 完成後 |
+  | `Warn` | 內容正確，但瀏覽器抽查沒做成（要登入、頁面開不起來、認不出畫面上的題目、抽查題未上架…任何前端狀況）或抽到輕微渲染問題——頁面未完整驗證。`qid:`／`cr:` 目標沒有作答頁，不因此 Warn | Subagent 完成後 |
 
   **只處理 `ToDo`（或無狀態）的 URL。** 以 `#` 開頭的行為註解，會被略過。
 
@@ -61,7 +65,7 @@
 | 1 | `agent-browser` 是否已安裝 | `bin/agent-browser --version`（shim 會依序找 `$AGENT_BROWSER_BIN` → brew → PATH → repo 內 npm） | 依 shim 的錯誤訊息安裝：Mac `brew install agent-browser`、Linux `npm install agent-browser`，或設 `AGENT_BROWSER_BIN` |
 | 2 | `urls/url_list.txt` 是否存在 | 檢查檔案是否存在 | 請先建立：`cp urls/url_list.txt.example urls/url_list.txt` 並填入要 QA 的 URL |
 | 3 | `url_list.txt` 中是否有 ToDo 的目標 | 讀取檔案，篩選 ToDo 或無狀態的行 | 沒有待處理的目標，請在 url_list.txt 中加入 URL 或 `qid:`／`cr:`（狀態設為 ToDo 或留空） |
-| 4 | `scripts/` 目錄的 JS 檔案是否完整 | 檢查是否有 18 個 .js 檔案 | 缺少 JS 工具檔，請確認 scripts/ 目錄完整（應有 18 個 .js 檔案） |
+| 4 | `scripts/` 目錄的 JS 檔案是否完整 | 檢查是否有 21 個 .js 檔案 | 缺少 JS 工具檔，請確認 scripts/ 目錄完整（應有 21 個 .js 檔案） |
 | 5 | `.env` 是否存在（選填） | 檢查 `.env` 檔案是否存在 | 若 URL 需要登入，請建立：`cp .env.example .env` 並填入帳密。無 `.env` 時隱藏題拿不到、需登入頁面的瀏覽器抽查會跳過 |
 | 6 | `python3` 可用 | `python3 --version` | `scripts/resolve_urls.py` 與 `scripts/fetch_questions.py` 需要 Python 3.9+ |
 
@@ -205,7 +209,7 @@ Footer:
 Subagent 的詳細執行流程定義在 `references/subagent-prompt-template.md`，包含：
 
 - **Step 1 內容驗證**（主路徑）：讀 `questions/<exerciseId>/all.md`，全部題目逐題：蓋住正解獨立判斷 → 比對 → 逐步驗解說 → 圖文一致 → 選項逐一判對錯。不開瀏覽器。
-- **Step 2 瀏覽器抽查**（1 題）：種 cookie 開舊版頁，看渲染、提交 Step 1 判定的正解看平台是否接受。任何前端狀況讓抽查做不成就記 notes 跳過，URL 目標內容全對時降為 Warn（`qid:`／`cr:` 目標沒有作答頁，仍 Pass）。
+- **Step 2 瀏覽器抽查**（1 題）：開作答頁（新版），用 `extract_qid.js` 認出畫面上是哪一題，看渲染、提交 Step 1 判定的正解看平台是否接受。做完了就照內容判 Pass／Fail；任何前端狀況讓抽查做不成才記 notes 跳過，URL 目標內容全對時降為 Warn（`qid:`／`cr:` 目標沒有作答頁，仍 Pass）。
 - 依序型（sequential_quiz）與累積型（exercise）都走同一條路；依序型多檢查分支 qid 是否存在。
 - 結構化 JSON 回傳
 
@@ -213,7 +217,7 @@ Subagent 的詳細執行流程定義在 `references/subagent-prompt-template.md`
 
 - **嚴格模式**：每一題都必須展開所有 hints，逐步驗證內容正確性（數學題逐步驗算；語文／知識題逐句核對說明與答案、選項是否一致）
 - **先蓋住正解再判**：題目檔已標平台正解（✓），必須先獨立判斷再比對，不可反過來替平台答案找理由
-- **瀏覲器只抽查不驗內容**：Step 2 只做一題、只看渲染與提交；累積型不做到 passCondition
+- **瀏覽器只抽查不驗內容**：Step 2 只做一題、只看渲染與提交；累積型不做到 passCondition
 - **圖文一致性**：圖片中的數值（角度、邊長等）必須與題幹及計算過程交叉比對，不一致即為 error
 - **選項完整驗證**：選擇題必須獨立驗證每一個選項的正確性，不可只驗證平台標記的答案
 - **題幹用語一致性**：檢查題幹前後的命名、符號是否一致（如不可前半用甲乙丙、後半用 ABC）
@@ -239,5 +243,6 @@ Subagent 的詳細執行流程定義在 `references/subagent-prompt-template.md`
 | 元素不在畫面內 | `scrollintoview @eN` 或 `scroll down 300` |
 | `find text` 多重匹配 | 改用 CSS selector |
 | diagnostic-exam 類型 | `SKIPPED (非 exercises 類型)` |
-| 種了 `content_ux_version_v2=old` 仍落在 `/new-exercise/` | 瀏覽器抽查跳過，notes 記 `browser_spotcheck: unavailable (new UI)`；內容驗證照常，內容全對時 **Warn**。不要在新版 DOM 上硬跑腳本 |
+| 指定了 `?qid=`（或想抽 `needs_browser` 的題）但頁面開出的是別題（`extract_qid.js` 回 `urlQidHonored: false`） | 帳號不是管理員、未登入，或講義題組頁不支援指定題。改抽畫面上那一題，notes 記 `browser_spotcheck: performed on qid <n> (target <m> not pinned)`；不因此降級 |
+| `probe_page.js` 回 `ui: "unknown"`、`extract_qid.js` 回 `qid: null`，或畫面上的 qid 不在題目池 | 抽查做不成，notes 記 `browser_spotcheck: unavailable (<原因>)`；內容驗證照常，內容全對時 **Warn** |
 | 其他任何前端狀況讓抽查做不完（頁面開不起來、逾時、元素抓不到） | 抽查跳過，notes 記 `browser_spotcheck: unavailable (<原因>)`；內容全對時 **Warn**。前端沒驗到就不能叫 Pass |

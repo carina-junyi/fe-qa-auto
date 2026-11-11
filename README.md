@@ -41,9 +41,11 @@ Automated QA testing for Junyi Academy exercises (all subjects) — validates qu
 | **資料夾 URL** | `https://www.junyiacademy.org/course-compare/...` | Step 1 自動展開為底下的題目 URL |
 | **`qid:<n>`／`cr:<cover_range>`** | `qid:138767`、`cr:s-eng-s-g12-b5-6-b` | **上架前 QA**（無 URL）：題目資料由呼叫方預先落在 `questions/<dir>/raw.json`（Compass 直讀 Datastore；本 repo 不碰憑證），只驗內容、不開瀏覽器 |
 
-> 2026-09-19 起主站把 `/exercises/<id>` 轉到新版作答頁 `/new-exercise/<id>`；
-> QA 腳本只支援舊版 DOM，subagent 會先種 cookie `content_ux_version_v2=old`
-> 切回舊版再跑。`/new-exercise/...` 形式的連結請先改回 `/exercises/...`。
+> 2026-09-21 起主站只剩新版作答頁：`/exercises/<id>` 一律轉到 `/exercise/<id>`（一般習題）或
+> `/sequential-quiz/<id>`（講義題組），切回舊版的 cookie 已無作用。QA 腳本新舊兩版 DOM 都認得，
+> subagent 直接在新版頁面上抽查。清單裡仍然放 `/exercises/<id>` 形式的連結（從網址列複製到的
+> `/exercise/...`、`/sequential-quiz/...` 請改回 `/exercises/...`，否則會被當成資料夾連結）。
+> 新版頁面顯示哪一題由平台決定；`?qid=<n>` 要用**管理員帳號**登入才會真的開出那一題，否則抽查的是畫面上那一題。
 
 ## Workflow
 
@@ -59,7 +61,7 @@ Automated QA testing for Junyi Academy exercises (all subjects) — validates qu
 
 Subagent（每個 URL）:
   1. 內容驗證：讀 questions/<id>/all.md，全部題目逐題（獨立判斷 → 比對正解 → 逐步驗解說 → 圖文一致 → 選項逐一判）
-  2. 瀏覽器抽查：種 cookie 開舊版頁 1 題，看渲染、提交正解看平台是否接受（任何前端狀況開不了就記 notes 跳過，內容全對時降為 Warn；`qid:`／`cr:` 目標沒有作答頁，仍 Pass）
+  2. 瀏覽器抽查：開作答頁（新版），認出畫面上是哪一題，看渲染、提交正解看平台是否接受（做完就照內容判 Pass／Fail；任何前端狀況讓抽查做不成才記 notes 跳過，內容全對時降為 Warn；`qid:`／`cr:` 目標沒有作答頁，仍 Pass）
   3. 回傳結構化 JSON（含 hintsVerification）
 ```
 
@@ -225,7 +227,7 @@ https://www.junyiacademy.org/exercises/jnc-5-10-1-1b?topic=course-compare/math-e
 （題幹、widget 含正解、hints、圖片 URL），寫成 `questions/<exercise-id>/{index.json,all.md,q-<qid>.md}`。
 公開題不需登入；有 `.env` 帳密會先登入拿 KAID，隱藏題才拿得到。API 形狀不符預期時腳本 exit 2 並印 `✗ SCHEMA`，主 agent 必須停下回報。
 
-> 2026-09-19 起 `/exercises/` 轉新版作答頁，舊版 DOM 隨時會消失；內容 QA 因此改以 API 為主、瀏覽器為輔。
+> 2026-09-19 起 `/exercises/` 轉新版作答頁（2026-09-21 起舊版 DOM 已完全開不出來）；內容 QA 因此改以 API 為主、瀏覽器為輔。
 > 題目檔已標平台正解（✓），agent 必須先蓋住正解獨立判斷再比對。
 
 ## Verification

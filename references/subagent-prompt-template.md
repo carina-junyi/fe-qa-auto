@@ -23,20 +23,22 @@
 
 - **題目檔**：`{questions_dir}/index.json`、`all.md`、`q-<qid>.md`（主 agent 已用 `scripts/fetch_questions.py` 落地；內容驗證只讀這些）
 - **JS 工具檔**（只在 Step 2 瀏覽器抽查用）：在 `scripts/` 目錄下，直接用 `cat scripts/xxx.js` 讀取
-  - `probe_page.js` — 偵測頁面結構與題組類型
+  - `probe_page.js` — 偵測頁面結構與題組類型（回 `ui`：new／legacy／unknown、`route`、`exerciseId`）
   - `api_recon.js` — API 取得題目池清單
-  - `extract_qid.js` — 取得當前題目 qid
+  - `extract_qid.js` — 取得**畫面上那一題**的 qid（新版頁面顯示哪一題由平台決定，不是第一題）
   - `extract_stem.js` — 擷取題幹
   - `identify_qtype.js` — 辨識題型與互動元素
   - `extract_hints.js` — 擷取解題說明
-  - `check_result.js` — 檢查提交結果
+  - `submit_answer.js` — 按「提交答案」
+  - `check_result.js` — 檢查提交結果（`isCorrect`／`isWrong`）
   - `extract_choices.js` — 擷取選項（單選/多選）
+  - `pick_choice.js` — 點選項：eval "$(cat scripts/pick_choice.js)(INDEX)"（從 0 起算）
   - `extract_inputs.js` — 擷取輸入框
   - `extract_dropdown.js` — 擷取下拉選單
-  - `extract_drag_items.js` — 擷取拖曳排序項目
+  - `extract_drag_items.js` — 擷取拖曳排序項目（回 `how`：mouse＝新版要用滑鼠拖、keyboard＝舊版用鍵盤排）
   - `set_mq.js` — MathQuill 填值：eval "$(cat scripts/set_mq.js)('LATEX', INDEX)"
-  - `set_select.js` — 下拉選單選值：eval "$(cat scripts/set_select.js)(INDEX, 'VALUE')"
-  - `focus_drag_item.js` — 聚焦拖曳項目：eval "$(cat scripts/focus_drag_item.js)(INDEX)"
+  - `set_select.js` — 下拉選單選值：eval "$(cat scripts/set_select.js)(INDEX, N)"（INDEX 從 0 起算；N 不加引號＝第幾個選項，從 1 起算）
+  - `focus_drag_item.js` — 聚焦拖曳項目（只有舊版頁面用得到）：eval "$(cat scripts/focus_drag_item.js)(INDEX)"
   - `check_login.js` — 偵測登入狀態（needsLogin / loginOverlayVisible）
 
 - **Skill 詳細流程**：在 `.claude/skills/` 下，需要時用 Read 工具讀取
@@ -88,32 +90,103 @@
 這是唯一「抽查缺席仍可 Pass」的情況（見狀態判定）。URL 目標但要抽的那題 `is_hidden: true` → 同樣跳過，
 notes 記 `browser_spotcheck: unavailable (unpublished)`，內容全對時 status 為 **Warn**。
 
-抽哪一題：有 target_qids 就抽目標題；否則優先 index.json 裡 `needs_browser: true` 的題
-（互動座標圖、量尺、拖曳圖、iframe——這些的作答面只有開頁看得到）；都沒有就抽第一題。
+> **2026-09-21 起主站只剩新版作答頁**（release prod-2026-09-21「舊內容頁一律轉導新版，移除 cookie 版本判斷」）。
+> `/exercises/<id>` 一律轉到 `/exercise/<id>`（一般習題）或 `/sequential-quiz/<id>`（講義題組）；
+> cookie `content_ux_version_v2=old` 已經沒有作用，**不要再種**。`scripts/` 新舊兩版 DOM 都認得，
+> 下面的流程就是在新版頁面上直接抽查。
 
-> **2026-09-19 起主站把 `/exercises/<id>` 307 轉到新版作答頁 `/new-exercise/<id>`**
-> （release rc-2026-09-19）。本工具的 `scripts/` 全押舊版 DOM。主站保留 cookie
-> `content_ux_version_v2=old` 切回舊版（與頁面「切換舊版作答頁」按鈕同一機制，30 天有效）
-> ——開第一個頁面後先種 cookie、再重開 URL：
+#### 2-1 開頁，認出畫面上是哪一題
 
 ```bash
 bin/agent-browser --session {session} open "{url}"
-bin/agent-browser --session {session} wait 3000
-bin/agent-browser --session {session} eval "document.cookie='content_ux_version_v2=old; max-age=2592000; path=/; SameSite=Lax'"
-bin/agent-browser --session {session} open "{url}"
+bin/agent-browser --session {session} set viewport 1280 1800
 bin/agent-browser --session {session} wait 3000
 bin/agent-browser --session {session} eval "$(cat scripts/mute_audio.js)"
-bin/agent-browser --session {session} eval "location.pathname"
+bin/agent-browser --session {session} eval "$(cat scripts/probe_page.js)"
+bin/agent-browser --session {session} eval "$(cat scripts/extract_qid.js)"
 ```
 
-- pathname 仍以 `/new-exercise/` 開頭 → 舊版入口已不可用。**不做抽查**，每題 notes 記
-  `browser_spotcheck: unavailable (new UI)`，內容全對時 status 為 **Warn**（見狀態判定）。不要在新版 DOM 上硬跑腳本。
-- 頁面要登入（`check_login.js` 回 needsLogin: true）→ 照下方登入流程；登入失敗 → notes 記 `browser_spotcheck: login failed`，內容全對時同樣 **Warn**。
-- 頁面開不起來、逾時、腳本抓不到元素等任何前端狀況讓抽查做不完 → notes 記 `browser_spotcheck: unavailable (<原因>)`，內容全對時 **Warn**。
-- 開到舊版頁 → `probe_page.js` 確認 exerciseMode；截圖一張（`screenshot`）看渲染；抽查題若不是第一題，用 reload／dot navigation 跳到它（或直接抽當前顯示的那一題，notes 記實際抽到的 qid）；
-  依「identify-question-type」→ 對應 `qa-*-question` skill 填入 Step 1 判定的正解，提交一次，`check_result.js` 看平台是否判對。
+（`set viewport 1280 1800`：新版頁面的題目在頁面內部的捲動區裡，`screenshot --full` 拍不到捲動區以下的部分；
+把視窗拉高，整題連同下方的選項、下拉、輸入框才會進到同一張截圖。）
+
+- `probe_page.js` 回 `ui`（`new`／`legacy`／`unknown`）、`route`（`exercise`／`sequential-quiz`）、`exerciseId`。
+  （新版頁面的進度圓點腳本讀不到，回傳裡的 `totalQuestions`／`answered` 一律是 0，不要拿來用；題數以 index.json 為準。）
+  `ui: "unknown"`（畫面上沒有題目區）→ `wait 3000` 後重跑一次；還是 unknown → 抽查做不成（見 2-4）。
+- 頁面要登入（`check_login.js` 回 `needsLogin: true`）→ 照下方登入流程；登入失敗 → 抽查做不成（見 2-4）。
+- `extract_qid.js` 回的 `qid` ＝**畫面上實際顯示的那一題**。新版頁面顯示哪一題由平台照作答進度決定，**不是題目檔的第一題**，
+  所以一律以這個 qid 為準：它必須在 `{questions_dir}/index.json` 裡。
+  `qid: null`，或 qid 不在題目池 → 抽查做不成（見 2-4）。
+- 這一題是你在 Step 1 驗過的題 → 用你判定的正解作答。
+  不是（有 target_qids 時 `all.md` 只含目標題，畫面上卻是別題）→ Read `{questions_dir}/q-<qid>.md`，用檔裡標的平台正解（✓）作答；
+  這一題**不做內容驗證**、不加進回傳的 `questions`，它只是拿來確認頁面渲染與提交流程正常。
+
+**想抽特定的題**（有 target_qids；或 index.json 有 `needs_browser: true` 的題——互動座標圖、量尺、拖曳圖、iframe，
+作答面只有開頁看得到）：先看上面 `extract_qid.js` 回的 `qid`——**已經是你要抽的那一題就直接抽**，不用重開
+（這時 `urlQid`／`urlQidHonored` 是 `null`，只代表網址沒帶 qid，不是失敗）。
+不是，而且 `route` 是 `exercise` → 改開新版網址並帶 qid，再跑一次 `extract_qid.js`：
+
+```bash
+bin/agent-browser --session {session} open "https://www.junyiacademy.org/exercise/<exerciseId>?qid=<n>"
+bin/agent-browser --session {session} wait 3000
+bin/agent-browser --session {session} eval "$(cat scripts/extract_qid.js)"
+```
+
+（舊網址 `/exercises/<id>?qid=<n>` 轉導時會把 `qid` 丟掉，所以要直接開 `/exercise/`。）看回傳的 `urlQidHonored`：
+
+- `true` → 畫面上就是指定的那一題，照常抽查。
+- `false` → 主站只對**管理員帳號**採用 `?qid=`（未登入、一般帳號帶了也沒用）；`/sequential-quiz/` 完全不支援指定題目。
+  這時**改抽畫面上那一題**，不要為了走到指定題一路作答過去。在目標題（你想抽的那一題）的 notes 記
+  `browser_spotcheck: performed on qid <實際抽到的 qid> (target <n> not pinned)`，summary 也寫一句「指定題未能在頁面上開出，抽查的是同一習題的另一題」。
+  這算抽查**做完了**（`browserCount: 1`），不因此降級。
+
+#### 2-2 看渲染
+
+```bash
+bin/agent-browser --session {session} screenshot /tmp/{session}-spotcheck.png
+```
+
+Read `/tmp/{session}-spotcheck.png`：題幹、選項、圖片、數學式有沒有亂碼、破圖、沒排版的 LaTeX 原始碼、被截斷的選項。
+截圖要在提交**之前**截：答對之後可能跳出「獲得新徽章」「技能升級囉」之類的視窗把題目蓋住（那不影響 2-3 的判定）。
+
+#### 2-3 填入正解、提交、看判定
+
+```bash
+bin/agent-browser --session {session} eval "$(cat scripts/identify_qtype.js)"
+```
+
+依 `elements` 裡每個元素的 `type` 填入 Step 1 判定的正解（一題可能混好幾種，全部填完再提交）：
+
+| type | 怎麼填 |
+|------|--------|
+| `radio`（單選／多選） | `eval "$(cat scripts/pick_choice.js)(<INDEX>)"`，INDEX 從 0 起算；多選逐個呼叫。先對照 `elements[].label` 與題目檔的選項文字確認是第幾個，不要假設順序一樣 |
+| `select`（下拉） | `eval "$(cat scripts/set_select.js)(<INDEX>, <N>)"`：INDEX＝第幾個下拉（從 0 起算，就是 `elements[].idx`；順序同題幹裡出現的順序，也就是題目檔的「dropdown 1、2…」依序對 idx 0、1…），N **不加引號**＝第幾個選項（從 1 起算，順序同題目檔的選項清單）。回傳的 `text` 是實際選到的文字，核對一下。對不上是哪個空格時跑 `extract_dropdown.js`，`context` 會把每個下拉在題幹裡的位置標成 `[下拉N]` |
+| `text-input`（數字輸入） | `fill '.question-area input[data-testid="perseus-input-number-widget"] >> nth=<INDEX>' "<答案>"`，INDEX 從 0 起算 |
+| `mathquill`（數學式輸入） | `eval "$(cat scripts/set_mq.js)('<LATEX>', <INDEX>)"` |
+| `drag-sort`（拖曳排序） | `eval "$(cat scripts/extract_drag_items.js)"` 回 `how: "mouse"`（新版頁面，鍵盤排不了）→ 照 `page_structures/drag-sort/answer-drag-sort.md` 最後一節「新版作答頁：滑鼠拖曳」用 `mouse` 指令拖。`mouse` 指令**必須一個一個依序跑，不可平行送出**。卡片文字是壓平的（`y=53x2` 是 $y=\dfrac53x^2$），對照題目檔的正確順序時要自己還原 |
+| `elements` 是空的 | 互動座標圖、量尺、純 iframe 等腳本填不了的 widget：不提交，只算做了 2-2 的渲染檢查——提交沒驗到，照 2-4「做不成」處理，原因寫 `render only, <widget> 無法自動作答` |
+
+提交並看判定（`wait` 不要超過 2 秒——答錯的回饋只顯示 5 秒）：
+
+```bash
+bin/agent-browser --session {session} eval "$(cat scripts/submit_answer.js)"
+bin/agent-browser --session {session} wait 1500
+bin/agent-browser --session {session} eval "$(cat scripts/check_result.js)"
+```
+
+- `isCorrect: true` → 平台接受你判定的正解。
+- `isWrong: true` → 平台不接受：先確認是不是自己填錯（重讀 `identify_qtype.js`／`extract_inputs.js`／`extract_dropdown.js` 看實際填進去的值）；
+  確定填的就是 Step 1 判定的正解 → 記 error（正解設定與題意不符，或渲染／輸入問題），**Fail**，notes 寫清楚填了什麼、平台回了什麼。
+- 兩個都是 `false` → 沒送出去（`submit_answer.js` 回 error，多半是還有空格沒填），或回饋已經消失。補填後重新提交一次再看。
+- `probe_page.js` 回 `ui: "legacy"`（舊版頁面，主站已不再開得出來，理論上不會出現）→ 腳本都保留了舊版分支，但填答與提交的細節照各 `qa-*-question` skill 與 `references/platform-gotchas.md` 的舊版做法。
+
+#### 2-4 抽查結果怎麼記
+
+- **做完了**（渲染看過、提交也看到判定）→ `browserCount: 1`。抽到的是你驗過的題 → 該題 `phase: "browser"`、notes 記 `browser_spotcheck: performed`；
+  抽到的是別題（指定題沒開出來）→ 照 2-1 記在目標題的 notes，`phase` 維持 `"api"`。
+  狀態只由內容與抽查發現決定：都沒問題就是 **Pass**——在新版頁面上完成抽查**不是** Warn 的理由。
 - 抽查發現渲染問題（亂碼、破圖、LaTeX 未渲染、選項顯示不全）→ 記 error `location: "Render"`；學生仍看得懂題目 → status 至少 Warn；看不到題幹或選項 → Fail。
-- 平台不接受 Step 1 判定的正解 → 記 error（正解設定與題意不符，或渲染／輸入問題），Fail，notes 寫清楚平台回了什麼。
+- **做不成**（頁面開不起來、逾時、`ui: "unknown"`、qid 認不出來或不在題目池、要登入而無帳密或登入失敗、畫面上那題的 widget 無法自動作答、腳本回 error 且重試無效）→
+  每題 notes 記 `browser_spotcheck: unavailable (<原因>)`，`browserCount: 0`，內容全對時 status 為 **Warn**。原因要寫具體（哪一支腳本、回了什麼），不要只寫「新版 UI」。
 
 #### 登入流程（頁面需要登入時）
 
@@ -134,7 +207,7 @@ bin/agent-browser --session {session} find text "馬上登入" click
 bin/agent-browser --session {session} wait 5000
 ```
 
-3. 再次執行 `check_login.js` 確認登入成功，然後重開原始 URL（cookie 在同一 session 內仍在）並複查 `location.pathname`。
+3. 再次執行 `check_login.js` 確認登入成功，然後重開原始 URL（登入狀態在同一 session 內仍在），從 2-1 重做。
 
 > **注意**：`JUNYI_EMAIL` 與 `JUNYI_PASSWORD` 僅用於填入 agent-browser 指令，**不得在任何輸出、log 或回傳 JSON 中顯示密碼明文**。
 
@@ -289,8 +362,8 @@ Hint 1/3: cosB = (5²+10²-17²)/(2×5×10) = (5+10-17)/100 = -2/100
   "totalQuestions": <驗證題數>,
   "coveredQids": <覆蓋 qid 數>,
   "totalInPool": <題目池總數>,
-  "browserCount": <Phase 1 browser 驗證的題數>,
-  "apiCount": <Phase 2 API 驗證的題數>,
+  "browserCount": <Step 2 實際抽查的題數（0 或 1）>,
+  "apiCount": <Step 1 內容驗證的題數>,
   "questions": [
     {
       "qid": <數字>,
@@ -322,10 +395,10 @@ Hint 1/3: cosB = (5²+10²-17²)/(2×5×10) = (5+10-17)/100 = -2/100
 
 ## 狀態判定
 
-- 所有題目 hintsValid=true 且無 errors → status: "Pass"
+- 所有題目 hintsValid=true 且無 errors（URL 目標：Step 2 抽查也做完了，在新版頁面上做完一樣算）→ status: "Pass"
 - 任一題有 errors（內容錯誤、或抽查發現平台不接受正解／嚴重渲染問題）→ status: "Fail"
 - 內容全部正確、Step 2 抽查發現輕微渲染問題（學生仍看得懂）→ status: "Warn"，errors 記 location "Render"
-- **URL 目標**、內容全部正確、Step 2 抽查做不了（新版 UI、要登入而無帳密或登入失敗、頁面開不起來、抽查題未上架、任何前端狀況）→ **status: "Warn"**，每題 notes 記 `browser_spotcheck: unavailable (<原因>)`，`errors` 留空。內容對是 Step 1 定的，但前端沒驗到就不能叫 Pass——讀報告的人要看得到「頁面未驗」
+- **URL 目標**、內容全部正確、Step 2 抽查做不成（要登入而無帳密或登入失敗、頁面開不起來、認不出畫面上是哪一題、抽查題未上架、任何前端狀況）→ **status: "Warn"**，每題 notes 記 `browser_spotcheck: unavailable (<原因>)`，`errors` 留空。內容對是 Step 1 定的，但前端沒驗到就不能叫 Pass——讀報告的人要看得到「頁面未驗」
 - **`qid:`／`cr:` 目標**（上架前，本來就沒有作答頁）、內容全部正確 → **status: "Pass"**，每題 notes 記 `browser_spotcheck: unavailable (no URL)`。這是唯一抽查缺席不降級的情況
 - **不得**因科目非數學、或題目是英文而回 SKIPPED；DOM 為 radio／checkbox／select／input／drag-sort 之一就照對應 skill 驗
 

@@ -2,7 +2,25 @@
 
 QA 自動化過程中發現的平台特殊行為與解法。
 
-## Gotchas 一覽
+> **2026-09-21 起主站只剩新版作答頁。** 下表與詳細說明多數是舊版 DOM 的經驗（`#hint`、`#check-answer-button`、徽章彈窗用 Escape…），
+> 在新版頁面上不適用的已在下面「新版作答頁」一節列出對應做法；完整差異見 `page_structures/shared/new-ui.md`。
+
+## 新版作答頁（現行）
+
+| # | 狀況 | 做法 |
+|---|------|------|
+| N1 | 畫面上的題目不是題目檔第一題；`?qid=` 沒開出指定題 | 顯示哪一題由平台決定，`?qid=` 只對管理員帳號有效。一律用 `extract_qid.js` 認畫面上那一題（看 `urlQidHonored`） |
+| N2 | `/exercises/<id>?qid=<n>` 轉導後 qid 不見了 | 轉導會丟掉 query。要帶 qid 就直接開 `/exercise/<id>?qid=<n>` |
+| N3 | 沒有 `#check-answer-button`／`#next-question-button` | 按鈕是文字「提交答案」→ 答對後變「下一題」的 `<button>`。用 `submit_answer.js`、`check_result.js` |
+| N4 | 提交後等太久，`check_result.js` 說沒提交 | 回饋文字只顯示 5 秒。答對有「下一題」可認；答錯只剩回饋文字，所以提交後 1～2 秒內就要看 |
+| N5 | 選項沒有 `[role=radio]`，也讀不到選中狀態 | `pick_choice.js(INDEX)`；選完直接提交 |
+| N6 | 下拉選不動、`agent-browser select` 沒反應 | 選項含數學式的下拉是 MUI Select（mousedown 才會打開）。一律用 `set_select.js(INDEX, N)` |
+| N7 | 拖曳排序用鍵盤（Space＋方向鍵）沒反應 | 新版是 pointer 拖曳，用 `mouse move/down/up`，見 `page_structures/drag-sort/answer-drag-sort.md` |
+| N8 | 答對幾題後題目被「獲得新徽章」「技能升級囉」蓋住，或被帶去下一個內容 | 抽查只做一題通常碰不到；碰到就重開習題網址 |
+| N9 | `find text "繼續" click` 之類點不到 | 文字重複時 `find text` 會失敗，改用 `eval` 找可見的 `<button>` 點（寫法見 `submit_answer.js`） |
+| N10 | 截圖只拍到題目上半，`screenshot --full` 也一樣 | 題目在頁面內部的捲動區裡。開頁後先 `set viewport 1280 1800` 再截 |
+
+## Gotchas 一覽（舊版 DOM）
 
 | # | 問題 | 解法 |
 |---|------|------|

@@ -1,5 +1,8 @@
 # Page Structures — DOM Reference for Junyi Academy Exercise Pages
 
+> **現行作答頁是新版（2026-09-21 起）**，先讀 [`shared/new-ui.md`](shared/new-ui.md)。
+> 下面其餘檔案描述的是舊版 DOM（`#workarea`…），主站已不再開得出來，留作對照；`scripts/` 新舊兩版都認得。
+
 ## Purpose
 
 This folder documents the DOM structure of each element type on Junyi Academy exercise pages. The agent should consult these files to extract data via `eval` JS instead of relying on screenshots.
@@ -16,6 +19,7 @@ This folder documents the DOM structure of each element type on Junyi Academy ex
 page_structures/
 ├── README.md              ← 本檔案
 ├── shared/                ← 所有題型共用的 DOM 結構
+│   ├── new-ui.md              新版作答頁（現行）：與舊版的差異、選擇器、判定方式
 │   ├── exercise-layout.md     整體頁面骨架
 │   ├── question-stem.md       題幹（文字 + 數學式）
 │   ├── mathjax-latex.md       MathJax 渲染與 LaTeX 擷取
@@ -37,6 +41,7 @@ page_structures/
 
 | File | Element |
 |------|---------|
+| `shared/new-ui.md` | **New answer page (current)** — differences from legacy, selectors, result detection |
 | `shared/exercise-layout.md` | Overall page skeleton |
 | `shared/question-stem.md` | Question stem (題幹) text + math |
 | `shared/mathjax-latex.md` | MathJax rendering & LaTeX extraction |

@@ -12,6 +12,14 @@ description: QA Fill-in Question (填充題 QA 流程)
 | **MathQuill** | `.mq-editable-field.mq-math-mode` | mouse click + `press` 逐字（`fill` 會 timeout） |
 | **普通 text input** | `input[type="text"][data-testid="perseus-input-number-widget"]` | `fill @ref "value"` 或 `keyboard type` |
 
+> **新版作答頁（現行）**：兩種輸入框的 DOM 與舊版相同。MathQuill 用 `set_mq.js`；普通輸入框直接用選擇器填，多個時加 `>> nth=<INDEX>`（從 0 起算，同 `extract_inputs.js` 的 idx）：
+>
+> ```bash
+> bin/agent-browser fill '.question-area input[data-testid="perseus-input-number-widget"] >> nth=0' "<答案>"
+> ```
+>
+> 填完用 `extract_inputs.js` 看 `value` 確認真的進去了，再用 `submit_answer.js` 提交。
+
 **前置條件：**
 - 頁面已開啟且題幹已擷取（Step 3-4 已完成）
 - `/identify-question-type` 的 `elements` 中包含 `type: "mathquill"` 或 `type: "text-input"` 的元素

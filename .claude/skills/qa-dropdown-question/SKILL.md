@@ -5,7 +5,17 @@ description: QA Dropdown Question (下拉選單題 QA 流程)
 
 # QA Dropdown Question (下拉選單題 QA 流程)
 
-針對頁面中的下拉式選單（`<select>`）元素執行答案選擇。此 skill 僅處理 `<select>` 元素，不處理文字輸入框或 MathQuill。
+針對頁面中的下拉式選單元素執行答案選擇。此 skill 僅處理下拉選單，不處理文字輸入框或 MathQuill。
+
+> **新版作答頁有兩種下拉並存**：選項是純文字的用原生 `<select>`，選項含數學式的用 MUI Select（`[role=combobox]`，
+> 選項要打開才在 DOM 裡，`agent-browser select` 對它沒用）。兩種都用 `set_select.js`，寫法一樣：
+>
+> ```bash
+> # INDEX＝第幾個下拉（從 0 起算，同 extract_dropdown.js 的 idx）；N 不加引號＝第幾個選項（從 1 起算，順序同題目檔）
+> bin/agent-browser eval "$(cat scripts/set_select.js)(<INDEX>, <N>)"
+> ```
+>
+> 回傳的 `text` 是實際選到的選項文字，核對一下。MUI 下拉的選項內容 `extract_dropdown.js` 讀不到（只回目前顯示的字），以題目檔為準。
 
 **前置條件：**
 - 頁面已開啟且題幹已擷取（Step 3-4 已完成）

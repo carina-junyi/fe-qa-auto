@@ -1,5 +1,6 @@
 (function(){
-  var workarea = document.getElementById('workarea');
+  // 舊版 DOM 的根是 #workarea；新版作答頁（/exercise、/sequential-quiz）是 .question-area
+  var workarea = document.getElementById('workarea') || document.querySelector('.question-area');
   if (!workarea) return JSON.stringify({error: 'no workarea'});
 
   var result = {mathquills: [], textInputs: [], totalCount: 0};
