@@ -20,6 +20,8 @@
 | Click by ref | `agent-browser click @eN` |
 | Click by CSS | `agent-browser click "#hint"` |
 | Mouse click | `agent-browser mouse move x y && agent-browser mouse down && agent-browser mouse up` |
+| Mouse drag（新版排序題） | `mouse move sx y` → `mouse down` → `mouse move sx-12 y` → `mouse move dx y` → `mouse move dx+1 y` → `mouse up`（見 `page_structures/drag-sort/answer-drag-sort.md`） |
+| Fill nth input | `agent-browser fill '<css> >> nth=1' "text"`（同一個選擇器有多個元素時，從 0 起算） |
 | Press key | `agent-browser press Enter` |
 | Dismiss popup | `agent-browser press Escape` |
 | Find & click text | `agent-browser find text "下一題" click` |

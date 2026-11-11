@@ -17,6 +17,9 @@ description: Identify Question Type (判斷題型)
 bin/agent-browser eval "$(cat scripts/identify_qtype.js)"
 ```
 
+回傳的每個元素有 `type` 與 `idx`；新版作答頁（`ui: "new"`）另外會標 `widget`：下拉是 `native`／`mui`，
+拖曳排序是 `pointer`（要用滑鼠拖）／`rfd`（舊版，可用鍵盤）。各 type 怎麼填見 `references/subagent-prompt-template.md` Step 2-3。
+
 ### 2. 判定 DOM 探測失敗
 
 如果 `eval` 回傳 `elements` 為空陣列或命令本身報錯，進入降級流程。

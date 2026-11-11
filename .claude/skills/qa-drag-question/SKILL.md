@@ -5,7 +5,14 @@ description: QA Drag-Sort Question (拖曳排序題 QA 流程)
 
 # QA Drag-Sort Question (拖曳排序題 QA 流程)
 
-針對頁面中的拖曳排序（`react-beautiful-dnd`）元素執行答案排列。
+針對頁面中的拖曳排序元素執行答案排列。
+
+> **先看 `extract_drag_items.js` 回的 `how`**：
+> - `"mouse"`（新版作答頁，現行）→ 卡片只能用滑鼠拖，照 `page_structures/drag-sort/answer-drag-sort.md` 最後一節
+>   「新版作答頁：滑鼠拖曳」做（`mouse move → down → move → move → up`，從左到右一格一格補，每拖一次重讀順序）。
+>   下面 Step B 的鍵盤操作在新版頁面**沒有作用**；輸出格式的 `movesMade` 填拖了幾次。
+>   （本檔的指令範例省略了 `--session`，由 subagent 執行時照 prompt 的規定加上。）
+> - `"keyboard"`（舊版 react-beautiful-dnd）→ 照下面 Step B。
 
 **前置條件：**
 - 頁面已開啟且題幹已擷取（Step 3-4 已完成）

@@ -1,5 +1,5 @@
 (function(){
-  var workarea = document.getElementById('workarea');
+  var workarea = document.getElementById('workarea') || document.querySelector('.question-area');
   var mq = workarea ? workarea.querySelector('.mq-editable-field.mq-math-mode') : null;
   if (!mq) return JSON.stringify({error: 'no MathQuill field in workarea'});
 

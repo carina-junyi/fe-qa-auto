@@ -4,6 +4,9 @@
 - Date: 2026-03-25
 - URL: https://www.junyiacademy.org/exercises/jfc-9-02-1-1e
 
+> **新版作答頁（2026-09-21 起，現行）的排序題不是這個結構**，見本檔最後一節「新版作答頁：滑鼠拖曳」。
+> 以下到該節之前描述的是舊版（react-beautiful-dnd）。
+
 ## CSS Selectors
 
 | Purpose | Selector | Notes |
@@ -131,3 +134,55 @@ if steps < 0: press ArrowLeft × |steps|（向左移動）
   <!-- more draggable items... -->
 </div>
 ```
+
+## 新版作答頁：滑鼠拖曳
+
+Last verified：2026-11-11，`/exercise/jfc-9-02-1-1e`（qid 141743、141742）。
+
+新版的排序 widget 是主站自己寫的 pointer 拖曳（`frontend/libs/perseus/src/widgets/Sorter.tsx`＋`hooks/useReorderableList.ts`）：
+卡片沒有 `data-rfd-*`、沒有 `role`、沒有 `tabindex`，**鍵盤排不了**。結構是：
+
+```
+.perseus-widget-container
+└── div
+    ├── div   「💡 小叮嚀：用手指或滑鼠直接拖曳卡片即可進行排序。」
+    └── div   ← 排序區（zone）
+        ├── div  卡片 0
+        ├── div  卡片 1
+        └── …
+```
+
+class 名稱是 emotion 的雜湊（`css-xxxxxx`），會變，不要拿來當選擇器。`extract_drag_items.js` 靠「小叮嚀」那一行的下一個兄弟節點找排序區，
+回傳 `ui: "new"`、`how: "mouse"`、`direction`，以及每張卡片的 `text`、中心 `x`／`y`、`left`／`right`。
+
+### 拖一張卡片
+
+拖曳的規則（讀源碼＋實測）：在卡片上 pointerdown → 移動超過 5px 才算開始拖 → 放開時插入位置由游標落在哪張卡片的前半或後半決定。
+用 `mouse` 指令依序做（中間多的兩次 move，一次是為了超過 5px 門檻，一次是確保最後位置有被算到；實測這個順序可行）：
+
+下面六個 `mouse` 指令**必須一個一個依序跑**（後一步依賴前一步的滑鼠狀態），不可平行送出。座標一律用**這次拖曳之前**
+`extract_drag_items.js` 讀到的值。
+
+```bash
+# 把中心在 (SX, Y) 的卡片，拖到目前位置 i 那張卡片的前面：DX = 位置 i 那張卡片（拖之前）的 left + 7
+bin/agent-browser mouse move <SX> <Y>
+bin/agent-browser mouse down
+bin/agent-browser mouse move <SX-12> <Y>     # 先動一小段，超過 5px 門檻
+bin/agent-browser mouse move <DX> <Y>
+bin/agent-browser mouse move <DX+1> <Y>      # 再動 1px，確保最後位置有被算到
+bin/agent-browser mouse up
+bin/agent-browser wait 500
+```
+
+### 排到目標順序
+
+從左到右一格一格補（selection sort），所以只需要「往左拖」這一種動作：
+
+1. `extract_drag_items.js` 讀目前順序。
+2. 對位置 i = 0, 1, …：該放的卡片已經在位置 i → 跳過；否則它一定在右邊某個位置 j，把它從 `(items[j].x, items[j].y)` 拖到 `items[i].left + 7`。
+3. **每拖一次都重跑 `extract_drag_items.js`**（卡片寬度不同，拖完其他卡片的座標都會變），確認順序如預期再做下一格。
+4. 排完用 `submit_answer.js` 提交、`check_result.js` 看判定。
+
+卡片文字是 MathJax 的純文字（例如 `y=−14x2` 是 $y=-\dfrac{1}{4}x^2$），分數與次方會被壓平，對照題目檔的「正確順序」時要自己還原。
+直向排列（`direction: "vertical"`）時把上面的 x／left 換成 y／top，同樣的做法（尚未實測到直向的題目）。
+

@@ -27,6 +27,11 @@ bin/agent-browser snapshot
 bin/agent-browser eval "$(cat scripts/probe_page.js)"
 ```
 
+回傳的 `ui` 是頁面版本：`new`（現行，根節點 `.question-area`）、`legacy`（舊版 `#workarea`，主站 2026-09-21 起已不再開得出來）、
+`unknown`（畫面上沒有題目區：還在載入、要登入、或被完成／獎勵畫面蓋住）。新版另有 `route`（`exercise`／`sequential-quiz`）、
+`exerciseId`、`qidParam`、`hasSubmitButton`；新版的進度圓點不是 `.problem-history-icon`，腳本讀不到，`totalQuestions`／`answered` 一律是 0。
+畫面上是哪一題要用 `extract_qid.js`（見 `page_structures/shared/new-ui.md`）。
+
 **題組類型說明：**
 
 | `exerciseMode` | 說明 | QA 策略 |
@@ -36,7 +41,7 @@ bin/agent-browser eval "$(cat scripts/probe_page.js)"
 
 ## Step 3: 異常處理
 
-若 `hasWorkarea: false` 或 `hasPerseusRenderer: false`：
+若 `ui: "unknown"`（舊版頁面：`hasWorkarea: false`）或 `hasPerseusRenderer: false`：
 
 1. 截圖視覺確認頁面狀態：
    ```bash

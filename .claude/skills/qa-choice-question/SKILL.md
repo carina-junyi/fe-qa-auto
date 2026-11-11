@@ -37,6 +37,17 @@ bin/agent-browser screenshot
 
 根據題幹（已在前置步驟擷取）獨立計算正確答案，然後：
 
+### 首選：`pick_choice.js`（新舊版頁面都可用）
+
+```bash
+# INDEX 從 0 起算，對照 extract_choices.js 回的 options[].idx／label；多選題逐個呼叫
+bin/agent-browser eval "$(cat scripts/pick_choice.js)(<INDEX>)"
+```
+
+新版作答頁的選項是 `[data-testid="perseus-radio-widget"] > label`，沒有 role 也讀不到選中狀態
+（`extract_choices.js` 的 `checked` 一律是 false）；選完直接提交，由平台判定確認。
+`pick_choice.js` 回 error 時才退回下面的座標點擊。
+
 ### 單選題
 
 點擊計算出的正確選項：
