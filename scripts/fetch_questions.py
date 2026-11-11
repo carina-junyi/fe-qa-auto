@@ -229,8 +229,19 @@ def normalize_widget(key: str, w: dict) -> dict:
             for a in answers
         ]}
     elif wtype == "expression":
-        out["answer"] = opts.get("value")
-        out["spec"] = {k: opts.get(k) for k in ("value", "form", "simplify", "buttonSets", "functions", "times")}
+        # 正解有兩種存法：舊版放 options.value；新版（帶 answerType 欄位）value 是空字串，
+        # 正解在 options.solutions（list）。只讀 value 會把新版題目誤判成「未配置正解」
+        # ——2026-11-09 mcenter-11-4-3／4-gsat-macom 四條假 Fail 即此。
+        solutions = [s for s in (opts.get("solutions") or []) if s not in (None, "")]
+        value = opts.get("value")
+        if value not in (None, ""):
+            out["answer"] = value
+        elif solutions:
+            out["answer"] = solutions[0] if len(solutions) == 1 else solutions
+        else:
+            out["answer"] = value
+        out["spec"] = {k: opts.get(k) for k in
+                       ("value", "solutions", "answerType", "form", "simplify", "buttonSets", "functions", "times")}
         if "buttonSets" in opts:
             out["flags"].append("check_button_sets")  # 答案用到的符號要在 buttonSets 裡打得出來
     elif wtype == "input-text":
