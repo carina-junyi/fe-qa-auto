@@ -38,6 +38,9 @@ API = BASE + "/api/v2/content/topicpage/{topic_id}"
 SSR = BASE + "/topics/{topic_id}"
 LOGIN_API = BASE + "/api/v2/user/login"
 UA = "fe-qa-auto/resolve-urls (+https://github.com/carina-junyi/fe-qa-auto)"
+# 主站 /api/ 的 XSRF 檢查：沒帶這個 header 的登入一律 403「Invalid Request」；
+# 帶著 KAID 打 API 時沒帶它，主站會當成匿名（隱藏題拿不到）。值不檢查，有帶就好。
+XSRF_HEADER = {"X-KA-FKEY": "1"}
 URL_LIST = "urls/url_list.txt"
 MAX_DEPTH = 5  # 巢狀資料夾遞迴上限（type=Topic 的子節點）
 
@@ -109,21 +112,26 @@ def _env_value(env_text: str, name: str) -> str:
 def login_kaid(email: str, password: str) -> str | None:
     """純 HTTP 登入取得 KAID cookie 值。
 
-    POST /api/v2/user/login {identifier, password} 成功時 body.data.auth 即為
-    KAID cookie 的值（base64 的身分字串）；帶著它請求資料夾頁，SSR 才會以
+    POST /api/v2/user/login {identifier, password}，要帶 X-KA-FKEY（主站 XSRF 檢查）。
+    成功時主站用 Set-Cookie 發 KAID（base64 的身分字串），body 只有 continue／userKeyEmail；
+    舊版主站放在 body.data.auth，留著當後備。帶著 KAID 請求資料夾頁，SSR 才會以
     「開發者」視角渲染、含隱藏題。失敗（帳密錯 / 端點異常）回 None。
     """
     body = json.dumps({"identifier": email, "password": password}).encode("utf-8")
     req = urllib.request.Request(
-        LOGIN_API, data=body, headers={"User-Agent": UA, "Content-Type": "application/json"}
+        LOGIN_API, data=body,
+        headers={"User-Agent": UA, "Content-Type": "application/json", **XSRF_HEADER},
     )
     try:
         with urllib.request.urlopen(req, timeout=30) as resp:
             data = json.loads(resp.read().decode("utf-8")).get("data") or {}
+            cookies = resp.headers.get_all("Set-Cookie") or []
     except (urllib.error.URLError, TimeoutError, ValueError) as err:
         print(f"  ! 登入請求失敗：{err}", file=sys.stderr)
         return None
-    auth = data.get("auth")
+    auth = data.get("auth") or next(
+        (c.split(";", 1)[0].split("=", 1)[1] for c in cookies if c.startswith("KAID=")), None
+    )
     if not auth:
         # errors 常見：noEmail（欄位沒讀到）、isInvalidPassword、signupMedium=Google
         print(f"  ! 登入未取得 KAID（errors={data.get('errors')}）", file=sys.stderr)
