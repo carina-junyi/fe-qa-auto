@@ -38,9 +38,10 @@ API = BASE + "/api/v2/content/topicpage/{topic_id}"
 SSR = BASE + "/topics/{topic_id}"
 LOGIN_API = BASE + "/api/v2/user/login"
 UA = "fe-qa-auto/resolve-urls (+https://github.com/carina-junyi/fe-qa-auto)"
-# 主站 /api/ 的 XSRF 檢查：沒帶這個 header 的登入一律 403「Invalid Request」；
-# 帶著 KAID 打 API 時沒帶它，主站會當成匿名（隱藏題拿不到）。值不檢查，有帶就好。
+# 主站 /api/ 要求帶這個 header：沒帶的登入請求回 403；
+# 帶著 KAID 打 API 時沒帶它，會被當成匿名（隱藏題拿不到）。
 XSRF_HEADER = {"X-KA-FKEY": "1"}
+SSR_EXERCISE_RE = re.compile(r"^/exercises?/([^/?#]+)")
 URL_LIST = "urls/url_list.txt"
 MAX_DEPTH = 5  # 巢狀資料夾遞迴上限（type=Topic 的子節點）
 
@@ -161,10 +162,12 @@ def fetch_hidden_exercises(topic_id: str, kaid: str) -> list[str]:
         return []
     out: list[str] = []
     for child in children:
-        url = str(child.get("url") or "")
         title = str(child.get("title") or "")
-        if url.startswith("/exercises/") and "[hidden]" in title:
-            out.append(BASE + url)
+        # 資料夾頁給的題目網址現在是單數 /exercise/<id>（舊版是 /exercises/）；
+        # 兩種都收，統一寫成 /exercises/<id>，跟 API 展開的題目、fetch_questions 的合約一致
+        m = SSR_EXERCISE_RE.match(str(child.get("url") or ""))
+        if m and "[hidden]" in title:
+            out.append(f"{BASE}/exercises/{m.group(1)}")
     return out
 
 
