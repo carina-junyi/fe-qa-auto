@@ -54,7 +54,7 @@ import urllib.parse
 import urllib.request
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from resolve_urls import login_kaid, read_credentials  # noqa: E402
+from resolve_urls import XSRF_HEADER, login_kaid, read_credentials  # noqa: E402
 
 BASE = "https://www.junyiacademy.org"
 API = BASE + "/api/v2/perseus/{exercise_id}/get_question"
@@ -165,7 +165,8 @@ def load_raw(folder: str, raw_path: str | None = None) -> tuple[list[dict], dict
 def fetch_pool(exercise_id: str, kaid: str | None) -> list[dict]:
     headers = {"User-Agent": UA}
     if kaid:
-        headers["Cookie"] = f"KAID={kaid}"
+        # 沒帶 X-KA-FKEY 時主站把這個請求當匿名：隱藏題回空池，KAID 等於白拿
+        headers.update({"Cookie": f"KAID={kaid}", **XSRF_HEADER})
     req = urllib.request.Request(API.format(exercise_id=exercise_id), headers=headers)
     last_err: Exception | None = None
     for attempt in range(2):
